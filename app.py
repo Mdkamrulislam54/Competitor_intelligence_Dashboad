@@ -3,8 +3,9 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
+import re
 
 st.set_page_config(
     page_title="Akij Resources — Competitor Intelligence",
@@ -12,292 +13,307 @@ st.set_page_config(
     layout="wide"
 )
 
-# ── Custom CSS ──────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
 
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.main { background: #0a0a0f; }
+* { font-family: 'DM Sans', sans-serif; }
 
 .big-title {
     font-family: 'Syne', sans-serif;
-    font-size: 2.8rem;
+    font-size: 2.4rem;
     font-weight: 800;
     color: #f0f0f5;
     line-height: 1.1;
-    margin-bottom: 0.3rem;
+    margin-bottom: 4px;
 }
 .big-title span { color: #e8ff47; }
+.subtitle { color: #6b6b85; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-.subtitle { color: #6b6b85; font-size: 1rem; margin-bottom: 2rem; }
+.filter-bar {
+    background: #13131a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
 
 .news-card {
     background: #13131a;
     border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 16px;
-    transition: all 0.2s;
+    border-left: 3px solid #e8ff47;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
 }
-.news-card:hover { border-color: rgba(232,255,71,0.3); }
+.news-card:hover { border-left-color: #47c5ff; }
 
-.card-source {
+.badge {
     display: inline-block;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 3px 10px;
     border-radius: 100px;
-    margin-right: 8px;
+    margin-right: 6px;
+    margin-bottom: 4px;
 }
-.source-bn  { background: rgba(255,107,71,0.15); color: #ff6b47; }
-.source-en  { background: rgba(232,255,71,0.10); color: #e8ff47; }
-.source-biz { background: rgba(71,197,255,0.15); color: #47c5ff; }
+.badge-comp   { background: rgba(232,255,71,0.12);  color: #e8ff47; }
+.badge-source { background: rgba(71,197,255,0.12);  color: #47c5ff; }
+.badge-pos    { background: rgba(71,255,178,0.12);  color: #47ffb2; }
+.badge-neg    { background: rgba(255,107,71,0.12);  color: #ff6b47; }
+.badge-neu    { background: rgba(107,107,133,0.15); color: #9090a0; }
 
-.card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
-              color: #f0f0f5; margin: 8px 0 6px; }
-.card-meta  { font-size: 12px; color: #6b6b85; margin-bottom: 8px; }
-.card-link  { font-size: 12px; color: #47c5ff; text-decoration: none; }
+.card-title { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+              color:#f0f0f5; margin:10px 0 6px; line-height:1.4; }
+.card-sum   { font-size:13px; color:#8080a0; line-height:1.6; margin-bottom:10px; }
+.card-meta  { font-size:12px; color:#6b6b85; }
+.card-link  { color:#47c5ff; font-size:12px; font-weight:600; text-decoration:none; }
 
 .stat-box {
     background: #13131a;
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 12px;
-    padding: 18px 20px;
+    padding: 16px;
     text-align: center;
+    margin-bottom: 16px;
 }
-.stat-num   { font-family: 'Syne', sans-serif; font-size: 2rem;
-              font-weight: 800; color: #e8ff47; }
-.stat-label { font-size: 12px; color: #6b6b85; text-transform: uppercase;
-              letter-spacing: 0.08em; }
+.stat-num   { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:#e8ff47; }
+.stat-lbl   { font-size:11px; color:#6b6b85; text-transform:uppercase; letter-spacing:.08em; }
 
-.tag-positive { background: rgba(71,255,178,0.1); color: #47ffb2;
-                padding: 2px 10px; border-radius: 100px; font-size: 11px; }
-.tag-negative { background: rgba(255,107,71,0.1);  color: #ff6b47;
-                padding: 2px 10px; border-radius: 100px; font-size: 11px; }
-.tag-neutral  { background: rgba(107,107,133,0.15); color: #6b6b85;
-                padding: 2px 10px; border-radius: 100px; font-size: 11px; }
-
-.stButton > button {
+div[data-testid="stButton"] button {
     background: #e8ff47 !important;
     color: #0a0a0f !important;
     font-family: 'Syne', sans-serif !important;
     font-weight: 800 !important;
     border: none !important;
     border-radius: 10px !important;
-    padding: 12px 28px !important;
-    font-size: 14px !important;
-    letter-spacing: 0.05em !important;
+    width: 100% !important;
+    font-size: 15px !important;
 }
-.stButton > button:hover { box-shadow: 0 8px 30px rgba(232,255,71,0.3) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── RSS Sources ──────────────────────────────────────────────
+# ── Data ─────────────────────────────────────────────────────
+
 RSS_FEEDS = {
-    "Prothom Alo (Business)": {
-        "url": "https://www.prothomalo.com/feed/business",
-        "type": "source-bn", "lang": "বাংলা"
-    },
-    "Daily Star (Business)": {
-        "url": "https://www.thedailystar.net/business/rss.xml",
-        "type": "source-en", "lang": "English"
-    },
-    "Financial Express BD": {
-        "url": "https://thefinancialexpress.com.bd/feed",
-        "type": "source-biz", "lang": "English"
-    },
-    "Dhaka Tribune (Business)": {
-        "url": "https://www.dhakatribune.com/business/feed",
-        "type": "source-en", "lang": "English"
-    },
-    "Kaler Kantho (Business)": {
-        "url": "https://www.kalerkantho.com/feed/business",
-        "type": "source-bn", "lang": "বাংলা"
-    },
-    "Samakal (Business)": {
-        "url": "https://samakal.com/feed/business",
-        "type": "source-bn", "lang": "বাংলা"
-    },
+    "Daily Star Business":      "https://www.thedailystar.net/business/rss.xml",
+    "Financial Express BD":     "https://thefinancialexpress.com.bd/feed",
+    "Dhaka Tribune Business":   "https://www.dhakatribune.com/business/feed",
+    "The Business Standard":    "https://www.tbsnews.net/rss.xml",
+    "Prothom Alo Business":     "https://www.prothomalo.com/feed/business",
+    "Kaler Kantho Business":    "https://www.kalerkantho.com/feed/business",
+    "Samakal Business":         "https://samakal.com/feed/business",
+    "Bonik Barta":              "https://bonikbarta.net/feed",
 }
 
-# ── Default competitors ──────────────────────────────────────
 DEFAULT_COMPETITORS = [
-    "Bashundhara Group",
-    "Meghna Group",
-    "Square Group",
-    "Pran RFL",
-    "Transcom Group",
-    "Abdul Monem",
-    "Anwar Group",
-    "City Group",
+    "Bashundhara Group", "Meghna Group", "Square Group",
+    "Pran RFL", "Transcom Group", "Abdul Monem",
+    "Anwar Group", "City Group",
 ]
 
-# ── Fetch RSS ────────────────────────────────────────────────
-@st.cache_data(ttl=1800)   # cache 30 min
-def fetch_rss(feed_name, feed_url):
-    try:
-        feed = feedparser.parse(feed_url)
-        items = []
-        for entry in feed.entries[:40]:
-            items.append({
-                "title":   entry.get("title", ""),
-                "link":    entry.get("link", "#"),
-                "summary": BeautifulSoup(entry.get("summary", ""), "html.parser").get_text()[:180],
-                "date":    entry.get("published", ""),
-                "source":  feed_name,
-            })
-        return items
-    except Exception:
-        return []
+POS_WORDS = ["expansion","growth","invest","profit","launch","partnership","award",
+             "record","export","ipo","listing","revenue","billion","million",
+             "বিনিয়োগ","প্রবৃদ্ধি","সম্প্রসারণ","মুনাফা","চুক্তি","রপ্তানি","পুরস্কার"]
+NEG_WORDS = ["loss","controversy","strike","fine","lawsuit","shutdown","fraud",
+             "scandal","crisis","debt","bankruptcy","layoff","complaint",
+             "ক্ষতি","বিতর্ক","ধর্মঘট","জরিমানা","মামলা","কেলেঙ্কারি","দেউলিয়া"]
 
 def get_sentiment(text):
-    text = text.lower()
-    pos = ["expansion", "growth", "invest", "profit", "launch", "partnership",
-           "বিনিয়োগ", "প্রবৃদ্ধি", "সম্প্রসারণ", "মুনাফা", "চুক্তি"]
-    neg = ["loss", "controversy", "strike", "fine", "lawsuit", "shutdown",
-           "ক্ষতি", "বিতর্ক", "ধর্মঘট", "জরিমানা", "মামলা"]
-    if any(w in text for w in pos): return "positive"
-    if any(w in text for w in neg): return "negative"
+    t = text.lower()
+    if any(w in t for w in POS_WORDS): return "positive"
+    if any(w in t for w in NEG_WORDS): return "negative"
     return "neutral"
 
-def search_news(all_items, competitors):
+def parse_date(date_str):
+    if not date_str: return None
+    fmts = ["%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S %Z",
+            "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d"]
+    for fmt in fmts:
+        try: return datetime.strptime(date_str[:30].strip(), fmt).replace(tzinfo=None)
+        except: pass
+    return None
+
+@st.cache_data(ttl=1800)
+def fetch_all_feeds(feed_keys):
+    items = []
+    for name in feed_keys:
+        url = RSS_FEEDS[name]
+        try:
+            feed = feedparser.parse(url)
+            for e in feed.entries[:60]:
+                summary = BeautifulSoup(e.get("summary",""), "html.parser").get_text()[:300]
+                pub = e.get("published", e.get("updated",""))
+                dt  = parse_date(pub)
+                items.append({
+                    "title":    e.get("title","").strip(),
+                    "link":     e.get("link","#"),
+                    "summary":  summary.strip(),
+                    "date_raw": pub,
+                    "date_dt":  dt,
+                    "date_str": dt.strftime("%d %b %Y") if dt else "তারিখ অজানা",
+                    "source":   name,
+                })
+        except Exception as ex:
+            pass
+    return items
+
+def match_competitors(items, competitors):
     results = []
-    for item in all_items:
+    for item in items:
         text = (item["title"] + " " + item["summary"]).lower()
         for comp in competitors:
-            keywords = comp.lower().split()
-            if any(kw in text for kw in keywords if len(kw) > 3):
-                item_copy = item.copy()
-                item_copy["competitor"] = comp
-                item_copy["sentiment"] = get_sentiment(item["title"] + " " + item["summary"])
-                results.append(item_copy)
+            # Match any meaningful word in competitor name
+            words = [w for w in comp.lower().split() if len(w) > 3]
+            # Also try full name
+            if comp.lower() in text or any(w in text for w in words):
+                r = item.copy()
+                r["competitor"] = comp
+                r["sentiment"]  = get_sentiment(item["title"] + " " + item["summary"])
+                results.append(r)
                 break
     return results
 
 # ── UI ───────────────────────────────────────────────────────
-st.markdown('<div class="big-title">Track Your <span>Competitors</span><br>In Real Time</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="big-title">Track Your <span>Competitors</span> In Real Time</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Bangladesh-এর সব নিউজ পোর্টাল থেকে competitor news — স্বয়ংক্রিয়ভাবে।</div>', unsafe_allow_html=True)
 
-# Sidebar
-with st.sidebar:
-    st.markdown("### ⚙️ Settings")
-    st.markdown("---")
+# ── FILTER BAR ───────────────────────────────────────────────
+with st.container():
+    st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
 
-    st.markdown("**📌 Competitors**")
-    competitors_text = st.text_area(
-        "এক লাইনে একটি করে লিখুন",
-        value="\n".join(DEFAULT_COMPETITORS),
-        height=220,
-        label_visibility="collapsed"
-    )
-    competitors = [c.strip() for c in competitors_text.strip().split("\n") if c.strip()]
+    col_a, col_b, col_c = st.columns([3, 3, 2])
 
-    st.markdown("**📡 News Sources**")
-    selected_feeds = {}
-    for name in RSS_FEEDS:
-        selected_feeds[name] = st.checkbox(name, value=True)
+    with col_a:
+        st.markdown("**📌 Competitors**")
+        competitors_input = st.text_area(
+            "competitors",
+            value="\n".join(DEFAULT_COMPETITORS),
+            height=160,
+            label_visibility="collapsed",
+            help="এক লাইনে একটি competitor"
+        )
+        competitors = [c.strip() for c in competitors_input.strip().splitlines() if c.strip()]
 
-    st.markdown("---")
-    run_btn = st.button("⚡ Intelligence চালু করুন", use_container_width=True)
+    with col_b:
+        st.markdown("**📡 News Sources**")
+        selected_sources = []
+        cols2 = st.columns(2)
+        for i, name in enumerate(RSS_FEEDS):
+            if cols2[i % 2].checkbox(name, value=True, key=f"src_{i}"):
+                selected_sources.append(name)
 
-# Main panel
-if run_btn:
-    active_feeds = {k: v for k, v in RSS_FEEDS.items() if selected_feeds.get(k)}
+    with col_c:
+        st.markdown("**🔍 Filters**")
 
-    if not active_feeds:
+        date_opt = st.selectbox("📅 সময়কাল", ["আজকের", "গত ৩ দিন", "গত ৭ দিন", "গত ৩০ দিন", "সব"])
+        sent_opt = st.selectbox("💬 Sentiment", ["সব", "positive", "negative", "neutral"])
+        comp_opt = st.selectbox("🏢 Competitor", ["সব"] + competitors)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        run = st.button("⚡ Search করুন")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ── RUN ──────────────────────────────────────────────────────
+if run:
+    if not selected_sources:
         st.warning("অন্তত একটি news source বেছে নিন!")
         st.stop()
-
-    all_items = []
-    progress = st.progress(0, text="News সংগ্রহ করা হচ্ছে...")
-
-    for i, (name, info) in enumerate(active_feeds.items()):
-        progress.progress((i + 1) / len(active_feeds), text=f"📡 {name} থেকে পড়া হচ্ছে...")
-        items = fetch_rss(name, info["url"])
-        for item in items:
-            item["source_type"] = info["type"]
-            item["lang"] = info["lang"]
-        all_items.extend(items)
-        time.sleep(0.2)
-
-    progress.empty()
-
-    results = search_news(all_items, competitors)
-
-    if not results:
-        st.info("😔 এই মুহূর্তে কোনো matching news পাওয়া যায়নি। কিছুক্ষণ পরে আবার চেষ্টা করুন।")
+    if not competitors:
+        st.warning("অন্তত একটি competitor লিখুন!")
         st.stop()
 
-    # Stats row
+    with st.spinner("📡 News সংগ্রহ করা হচ্ছে..."):
+        all_items = fetch_all_feeds(tuple(selected_sources))
+
+    with st.spinner("🔍 Competitor news খোঁজা হচ্ছে..."):
+        results = match_competitors(all_items, competitors)
+
+    # Date filter
+    now = datetime.now()
+    date_map = {
+        "আজকের":    1,
+        "গত ৩ দিন": 3,
+        "গত ৭ দিন": 7,
+        "গত ৩০ দিন":30,
+        "সব":       None,
+    }
+    days = date_map[date_opt]
+    if days:
+        cutoff = now - timedelta(days=days)
+        results = [r for r in results if r["date_dt"] and r["date_dt"] >= cutoff]
+
+    # Sentiment filter
+    if sent_opt != "সব":
+        results = [r for r in results if r["sentiment"] == sent_opt]
+
+    # Competitor filter
+    if comp_opt != "সব":
+        results = [r for r in results if r["competitor"] == comp_opt]
+
+    # Sort newest first
+    results.sort(key=lambda x: x["date_dt"] or datetime.min, reverse=True)
+
+    # ── STATS ────────────────────────────────────────────────
     pos = sum(1 for r in results if r["sentiment"] == "positive")
     neg = sum(1 for r in results if r["sentiment"] == "negative")
-    unique_comps = len(set(r["competitor"] for r in results))
+    neu = sum(1 for r in results if r["sentiment"] == "neutral")
+    uniq = len(set(r["competitor"] for r in results))
 
-    c1, c2, c3, c4 = st.columns(4)
-    for col, num, label in [
-        (c1, len(results),   "মোট নিউজ"),
-        (c2, unique_comps,   "Competitors"),
-        (c3, pos,            "Positive"),
-        (c4, neg,            "Negative"),
+    s1,s2,s3,s4,s5 = st.columns(5)
+    for col, num, lbl, color in [
+        (s1, len(results), "মোট নিউজ",   "#e8ff47"),
+        (s2, uniq,         "Competitors", "#47c5ff"),
+        (s3, pos,          "Positive",    "#47ffb2"),
+        (s4, neg,          "Negative",    "#ff6b47"),
+        (s5, neu,          "Neutral",     "#9090a0"),
     ]:
-        col.markdown(f"""
-        <div class="stat-box">
-          <div class="stat-num">{num}</div>
-          <div class="stat-label">{label}</div>
-        </div>""", unsafe_allow_html=True)
+        col.markdown(f"""<div class="stat-box">
+            <div class="stat-num" style="color:{color}">{num}</div>
+            <div class="stat-lbl">{lbl}</div></div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f"### 📰 Results &nbsp;<span style='background:rgba(232,255,71,0.1);color:#e8ff47;padding:3px 14px;border-radius:100px;font-size:13px'>{len(results)} news found</span>", unsafe_allow_html=True)
 
-    # Filter row
-    f1, f2, _ = st.columns([2, 2, 4])
-    filter_comp = f1.selectbox("Competitor filter", ["সব"] + list(set(r["competitor"] for r in results)))
-    filter_sent = f2.selectbox("Sentiment filter", ["সব", "positive", "negative", "neutral"])
+    if not results:
+        st.info("😔 এই filter-এ কোনো news পাওয়া যায়নি। Date range বাড়িয়ে বা 'সব' দিয়ে আবার চেষ্টা করুন।")
+    else:
+        sent_badge = {
+            "positive": '<span class="badge badge-pos">📈 Positive</span>',
+            "negative": '<span class="badge badge-neg">📉 Negative</span>',
+            "neutral":  '<span class="badge badge-neu">➡️ Neutral</span>',
+        }
 
-    filtered = results
-    if filter_comp != "সব":
-        filtered = [r for r in filtered if r["competitor"] == filter_comp]
-    if filter_sent != "সব":
-        filtered = [r for r in filtered if r["sentiment"] == filter_sent]
+        for item in results:
+            st.markdown(f"""
+            <div class="news-card">
+              <div>
+                <span class="badge badge-comp">{item['competitor']}</span>
+                <span class="badge badge-source">{item['source']}</span>
+                {sent_badge.get(item['sentiment'],'')}
+                <span class="card-meta" style="float:right">🗓️ {item['date_str']}</span>
+              </div>
+              <div class="card-title">{item['title']}</div>
+              <div class="card-sum">{item['summary'][:200]}{'…' if len(item['summary'])>200 else ''}</div>
+              <a class="card-link" href="{item['link']}" target="_blank">🔗 সম্পূর্ণ পড়ুন →</a>
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.markdown(f"### সর্বশেষ নিউজ &nbsp; <span style='background:rgba(232,255,71,0.1);color:#e8ff47;padding:3px 12px;border-radius:100px;font-size:13px'>{len(filtered)} results</span>", unsafe_allow_html=True)
-    st.markdown("---")
-
-    sent_badge = {
-        "positive": '<span class="tag-positive">📈 Positive</span>',
-        "negative": '<span class="tag-negative">📉 Negative</span>',
-        "neutral":  '<span class="tag-neutral">➡️ Neutral</span>',
-    }
-
-    for item in filtered:
-        stype = item.get("source_type", "source-en")
-        st.markdown(f"""
-        <div class="news-card">
-          <div>
-            <span class="card-source {stype}">{item['source']}</span>
-            <span style="background:#1c1c28;color:#6b6b85;padding:3px 10px;border-radius:100px;font-size:11px">{item['competitor']}</span>
-            {sent_badge.get(item['sentiment'], '')}
-          </div>
-          <div class="card-title">{item['title']}</div>
-          <div class="card-meta">{item['summary'][:160]}{'…' if len(item['summary']) > 160 else ''}</div>
-          <div class="card-meta">🗓️ {item['date'][:25] if item['date'] else 'তারিখ অজানা'}</div>
-          <a class="card-link" href="{item['link']}" target="_blank">🔗 সম্পূর্ণ পড়ুন →</a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Download CSV
-    st.markdown("---")
-    df = pd.DataFrame(filtered)[["competitor", "title", "source", "date", "sentiment", "link"]]
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("📥 CSV Download করুন", csv, "competitor_news.csv", "text/csv")
+        # CSV export
+        st.markdown("---")
+        df = pd.DataFrame(results)[["competitor","title","source","date_str","sentiment","link"]]
+        df.columns = ["Competitor","Title","Source","Date","Sentiment","Link"]
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button("📥 CSV Export করুন", csv, "competitor_news.csv", "text/csv", use_container_width=False)
 
 else:
     st.markdown("""
-    <div style="text-align:center; padding:80px 20px; color:#6b6b85;">
-      <div style="font-size:48px; margin-bottom:16px; opacity:0.4">🎯</div>
-      <div style="font-family:'Syne',sans-serif; font-size:1.3rem; color:#f0f0f5; opacity:0.4; margin-bottom:8px">Ready to Monitor</div>
-      <p>বাম দিকে competitor সেট করে <strong>"Intelligence চালু করুন"</strong> চাপুন</p>
+    <div style="text-align:center;padding:60px 20px;color:#6b6b85;">
+      <div style="font-size:52px;margin-bottom:16px">🎯</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.4rem;color:#f0f0f5;opacity:0.5;margin-bottom:8px">Ready to Monitor</div>
+      <p>উপরে filters সেট করে <strong style="color:#e8ff47">⚡ Search করুন</strong> চাপুন</p>
     </div>
     """, unsafe_allow_html=True)

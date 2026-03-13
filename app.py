@@ -1,152 +1,142 @@
+```python
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import feedparser
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime, timedelta
+import time
 
-# -----------------------------
+# ----------------------------
 # PAGE CONFIG
-# -----------------------------
+# ----------------------------
 st.set_page_config(
-    page_title="Bangladesh Business Intelligence",
-    page_icon="📊",
-    layout="wide"
+    page_title="Akij Resources — Intelligence Hub",
+    page_icon="◈",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-st.title("📊 Bangladesh Corporate News Intelligence")
+# AUTO REFRESH EVERY 10 MINUTES
+st_autorefresh(interval=600000, key="news_refresh")
 
-# -----------------------------
-# RSS SOURCES
-# -----------------------------
+# ----------------------------
+# DATA
+# ----------------------------
+
 RSS_SOURCES = [
-
 ("The Daily Star","https://www.thedailystar.net/business/rss.xml"),
-("Financial Express","https://thefinancialexpress.com.bd/feed"),
+("Financial Express BD","https://thefinancialexpress.com.bd/feed"),
 ("The Business Standard","https://www.tbsnews.net/rss.xml"),
 ("Dhaka Tribune","https://www.dhakatribune.com/business/feed"),
 ("Prothom Alo","https://www.prothomalo.com/feed/business"),
 ("Kaler Kantho","https://www.kalerkantho.com/feed/business"),
 ("Samakal","https://samakal.com/feed/business"),
-("Bonik Barta","https://bonikbarta.net/feed")
-
+("Bonik Barta","https://bonikbarta.net/feed"),
 ]
 
-# -----------------------------
-# COMPETITORS
-# -----------------------------
-COMPETITORS = [
-
-"Bashundhara Group",
-"Meghna Group",
-"Square Group",
-"PRAN RFL",
-"Transcom Group",
-"Walton",
-"Beximco",
-"ACI",
-"City Group",
-"Jamuna Group",
-"Akij Group",
-"Abul Khair",
-"LafargeHolcim",
-"Confidence Cement"
-
+ALL_COMPETITORS = [
+"Bashundhara Group","Bashundhara",
+"Meghna Group","Meghna",
+"Square Group","Square",
+"Pran RFL","Pran","RFL",
+"Transcom Group","Transcom",
+"Abdul Monem","Anwar Group",
+"City Group","Beximco",
+"Partex Group","ACI Limited","ACI",
+"BRAC","Gemcon Group","Navana Group",
+"PHP Group","Ha-Meem Group",
+"Epyllion Group","DBL Group",
+"Jamuna Group","Orion Group",
+"Rahimafrooz","Runner Group",
+"Walton Group","Walton",
+"Singer Bangladesh",
+"Grameenphone","Robi","Banglalink",
+"bKash","Nagad"
 ]
 
-# -----------------------------
-# BUSINESS KEYWORDS
-# -----------------------------
-BIZ_KEYWORDS = [
-
-"investment","profit","loss","revenue","factory","production",
-"export","import","ipo","share","stock","expansion","plant",
-"merger","acquisition","ceo","chairman","director",
-"বিনিয়োগ","মুনাফা","রপ্তানি","কারখানা","উৎপাদন"
-
+BIZ_INCLUDE = [
+"revenue","profit","loss","investment","ipo","shares","export",
+"import","factory","plant","production","expansion",
+"market","company","industry","corporate","business",
+"বিনিয়োগ","মুনাফা","রপ্তানি","আমদানি","কারখানা"
 ]
 
-# -----------------------------
-# SENTIMENT WORDS
-# -----------------------------
-POSITIVE = ["profit","growth","investment","expansion","record","export"]
-NEGATIVE = ["loss","fine","lawsuit","crisis","debt","default"]
+POS_W = ["profit","growth","investment","expansion","export","revenue","মুনাফা","বিনিয়োগ"]
+NEG_W = ["loss","fine","lawsuit","debt","default","ক্ষতি","জরিমানা"]
 
-# -----------------------------
-# SENTIMENT FUNCTION
-# -----------------------------
+# ----------------------------
+# FUNCTIONS
+# ----------------------------
+
 def get_sentiment(text):
-
     text = text.lower()
-
-    if any(w in text for w in POSITIVE):
+    if any(w in text for w in POS_W):
         return "positive"
-
-    if any(w in text for w in NEGATIVE):
+    if any(w in text for w in NEG_W):
         return "negative"
-
     return "neutral"
 
-# -----------------------------
-# BUSINESS FILTER
-# -----------------------------
-def is_business(title,summary):
 
+def is_biz(title,summary):
     text = (title+" "+summary).lower()
+    return any(k in text for k in BIZ_INCLUDE)
 
-    return any(k in text for k in BIZ_KEYWORDS)
 
-# -----------------------------
-# DATE PARSER
-# -----------------------------
-def parse_date(date):
-
-    if not date:
+def parse_dt(s):
+    if not s:
         return None
 
-    try:
-        return datetime.strptime(date[:25],"%a, %d %b %Y %H:%M:%S")
-    except:
-        return None
+    for fmt in [
+        "%a, %d %b %Y %H:%M:%S %z",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%d"
+    ]:
+        try:
+            return datetime.strptime(s[:30],fmt).replace(tzinfo=None)
+        except:
+            pass
 
-# -----------------------------
-# FETCH NEWS
-# -----------------------------
-@st.cache_data(ttl=600)
+    return None
 
-def fetch_news():
 
-    items = []
+HEADERS={"User-Agent":"Mozilla/5.0"}
+
+@st.cache_data(ttl=900)
+def fetch_all():
+
+    items=[]
 
     for name,url in RSS_SOURCES:
 
         try:
 
-            r = requests.get(url,timeout=10)
-            feed = feedparser.parse(r.content)
+            r=requests.get(url,timeout=10,headers=HEADERS)
+
+            feed=feedparser.parse(r.content)
 
             for e in feed.entries:
 
-                title = e.get("title","")
+                title=e.get("title","").strip()
 
-                summary = BeautifulSoup(
+                summary=BeautifulSoup(
                     e.get("summary",""),
                     "html.parser"
                 ).get_text()
 
-                link = e.get("link","")
+                pub=e.get("published","")
 
-                pub = e.get("published","")
-
-                dt = parse_date(pub)
+                dt=parse_dt(pub)
 
                 items.append({
 
                     "title":title,
                     "summary":summary,
-                    "link":link,
-                    "source":name,
-                    "date":dt
+                    "link":e.get("link","#"),
+                    "date_dt":dt,
+                    "date_str":dt.strftime("%d %b %Y") if dt else "—",
+                    "source":name
 
                 })
 
@@ -155,13 +145,11 @@ def fetch_news():
 
     return items
 
-# -----------------------------
-# MATCH COMPETITOR
-# -----------------------------
-def match_news(items):
+
+def match_news(items,competitors):
 
     results=[]
-    seen=set()
+    seen_titles=set()
 
     for item in items:
 
@@ -170,22 +158,24 @@ def match_news(items):
 
         text=(title+" "+summary).lower()
 
-        if title in seen:
+        clean_title=title.lower().strip()
+
+        if clean_title in seen_titles:
             continue
 
-        seen.add(title)
+        seen_titles.add(clean_title)
 
-        if not is_business(title,summary):
+        if not is_biz(title,summary):
             continue
 
-        comp_match=None
+        matched=None
 
-        for comp in COMPETITORS:
+        for comp in competitors:
 
             cname=comp.lower()
 
             if cname in text:
-                comp_match=comp
+                matched=comp
                 break
 
             words=cname.split()
@@ -194,88 +184,97 @@ def match_news(items):
 
                 if len(w)>3 and w in text:
 
-                    comp_match=comp
+                    matched=comp
                     break
 
-            if comp_match:
+            if matched:
                 break
 
-        if not comp_match:
+        if not matched:
             continue
 
-        item["competitor"]=comp_match
-        item["sentiment"]=get_sentiment(text)
+        r=item.copy()
 
-        results.append(item)
+        r["competitor"]=matched
+        r["sentiment"]=get_sentiment(text)
+        r["is_social"]=False
+
+        results.append(r)
 
     return results
 
-# -----------------------------
-# FILTER OPTIONS
-# -----------------------------
-days_option=st.selectbox(
+# ----------------------------
+# FILTERS
+# ----------------------------
 
-"Time Range",
+st.title("Akij Corporate Intelligence")
 
-["1 Day","3 Days","7 Days","30 Days","All"]
-
+date_opt=st.selectbox(
+"সময়কাল",
+["আজকের","গত ৩ দিন","গত ৭ দিন","গত ৩০ দিন","সব"],
+index=2
 )
 
-# -----------------------------
-# RUN BUTTON
-# -----------------------------
-if st.button("🔎 Fetch Intelligence"):
+run=st.button("Search News")
 
-    raw=fetch_news()
+# ----------------------------
+# RESULTS
+# ----------------------------
 
-    news=match_news(raw)
+if run:
 
-    # DATE FILTER
+    raw=fetch_all()
+
+    results=match_news(raw,ALL_COMPETITORS)
+
     days_map={
-
-        "1 Day":1,
-        "3 Days":3,
-        "7 Days":7,
-        "30 Days":30,
-        "All":None
-
+    "আজকের":1,
+    "গত ৩ দিন":3,
+    "গত ৭ দিন":7,
+    "গত ৩০ দিন":30,
+    "সব":None
     }
 
-    days=days_map[days_option]
+    days=days_map[date_opt]
 
     if days:
 
         cutoff=datetime.now()-timedelta(days=days)
 
-        news=[n for n in news if n["date"] and n["date"]>=cutoff]
+        results=[
+        r for r in results
+        if r["date_dt"] and r["date_dt"]>=cutoff
+        ]
 
-    # SORT
-    news=sorted(news,key=lambda x:x["date"] or datetime.min,reverse=True)
+    results.sort(
+    key=lambda x:x.get("date_dt") or datetime.min,
+    reverse=True
+    )
 
-    st.subheader(f"Found {len(news)} Competitor News")
+    st.subheader(f"{len(results)} competitor news found")
 
-    for n in news:
+    for item in results:
 
         st.markdown(f"""
-### {n['title']}
+### {item['title']}
 
-**Competitor:** {n['competitor']}  
-**Source:** {n['source']}  
-**Sentiment:** {n['sentiment']}  
+**Competitor:** {item['competitor']}  
+**Source:** {item['source']}  
+**Date:** {item['date_str']}  
+**Sentiment:** {item['sentiment']}
 
-{n['summary'][:200]}...
+{item['summary'][:200]}...
 
-[Read Full Article]({n['link']})
-
+[Read Full Article]({item['link']})
 ---
 """)
 
-    df=pd.DataFrame(news)
+    df=pd.DataFrame(results)
 
     st.download_button(
-
-        "Download CSV",
-        df.to_csv(index=False).encode("utf-8"),
-        "business_news.csv"
-
-    )
+    "Download CSV",
+    df.to_csv(index=False).encode("utf-8"),
+    "akij_intelligence.csv",
+    "text/csv"
+)
+```

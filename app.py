@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import time
 
 st.set_page_config(
-    page_title="Akij Resources — Intelligence Hub",
+    page_title="Akij Resource — Intelligence Hub",
     page_icon="◈",
     layout="wide",
     initial_sidebar_state="collapsed"

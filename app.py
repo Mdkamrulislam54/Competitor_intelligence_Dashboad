@@ -263,11 +263,51 @@ def is_biz(title, summary):
 
 def parse_dt(s):
     if not s: return None
-    for fmt in ["%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S %Z",
-                "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d"]:
-        try: return datetime.strptime(s[:30].strip(), fmt).replace(tzinfo=None)
-        except: pass
+    # Try all common formats
+    formats = [
+        "%a, %d %b %Y %H:%M:%S %z",
+        "%a, %d %b %Y %H:%M:%S %Z",
+        "%a, %d %b %Y %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d %b %Y",
+        "%d/%m/%Y",
+    ]
+    s = s.strip()
+    # Remove timezone names that confuse strptime (e.g. "GMT", "BST", "UTC")
+    import re
+    s_clean = re.sub(r' (GMT|UTC|BST|EST|PST|IST|BDT)$', '', s)
+    for src in [s_clean, s]:
+        for fmt in formats:
+            try:
+                return datetime.strptime(src[:30].strip(), fmt).replace(tzinfo=None)
+            except:
+                pass
+    # Last resort: use email.utils parser
+    try:
+        from email.utils import parsedate_to_datetime
+        return parsedate_to_datetime(s).replace(tzinfo=None)
+    except:
+        pass
     return None
+
+def friendly_date(dt):
+    """Show relative date if recent, else full date"""
+    if not dt: return "—"
+    now  = datetime.now()
+    diff = now - dt
+    if diff.days == 0:
+        hrs = diff.seconds // 3600
+        if hrs == 0:
+            mins = diff.seconds // 60
+            return f"{mins} মিনিট আগে" if mins > 0 else "এইমাত্র"
+        return f"{hrs} ঘণ্টা আগে"
+    if diff.days == 1: return "গতকাল"
+    if diff.days < 7:  return f"{diff.days} দিন আগে"
+    return dt.strftime("%d %b %Y")
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
 
@@ -282,14 +322,23 @@ def fetch_all():
                 title   = e.get("title", "").strip()
                 summary = BeautifulSoup(e.get("summary", ""), "html.parser").get_text()[:500].strip()
                 if not title: continue
-                pub = e.get("published", e.get("updated", ""))
-                dt  = parse_dt(pub)
+                # Try multiple date fields
+                pub = (e.get("published") or e.get("updated") or
+                       e.get("published_parsed") or e.get("dc_date") or "")
+                if hasattr(pub, 'tm_year'):  # struct_time from feedparser
+                    try:
+                        import calendar
+                        dt = datetime.fromtimestamp(calendar.timegm(pub))
+                    except:
+                        dt = None
+                else:
+                    dt = parse_dt(str(pub))
                 items.append({
                     "title":    title,
                     "summary":  summary,
                     "link":     e.get("link", "#"),
                     "date_dt":  dt,
-                    "date_str": dt.strftime("%d %b %Y") if dt else "—",
+                    "date_str": friendly_date(dt),
                     "source":   name,
                 })
         except:
@@ -394,7 +443,7 @@ if run or auto_run:
               </div>
               <div class="card-row">
                 <div class="ctitle">{item['title']}</div>
-                <div class="date-pill">📅 {item['date_str']}</div>
+                <div class="date-pill">🕐 {item['date_str']}</div>
               </div>
               <div class="csum">{summ}</div>
               <div class="clink-row">

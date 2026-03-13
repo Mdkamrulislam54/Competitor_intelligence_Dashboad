@@ -18,7 +18,7 @@ st.set_page_config(
 count = st_autorefresh(interval=900_000, key="autorefresh")
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# PROFESSIONAL CSS DESIGN (same as before)
+# PROFESSIONAL CSS DESIGN
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 st.markdown("""
@@ -410,32 +410,80 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# RELAXED BUSINESS FILTER (No longer too strict)
+# STRICT SPORTS & NON-BUSINESS FILTER
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-# Exclude only obvious non-business news
-EXCLUDE_KEYWORDS = [
-    "cricket", "football", "soccer", "sports", "match", "game", "player", "goal",
-    "movie", "film", "cinema", "actress", "actor", "music", "song",
-    "recipe", "cook", "food", "diet",
-    "weather", "climate", "temperature",
-    "ক্রিকেট", "ফুটবল", "খেলা", "গোল", "দল",
-    "চলচ্চিত্র", "সিনেমা", "গান",
-    "রান্না", "খাবার",
-    "আবহাওয়া"
+SPORTS_KEYWORDS = [
+    # Cricket
+    "cricket", "bat", "bowl", "wicket", "runs", "innings", "test cricket", "odi", "t20",
+    "asia cup", "world cup", "bpl", "ipl", "dpl",
+    
+    # Football/Soccer
+    "football", "soccer", "goal", "match", "player", "team", "league", "premier league",
+    "champions league", "fifa world cup",
+    
+    # Other Sports
+    "badminton", "tennis", "volleyball", "basketball", "hockey", "rugby", "wrestling",
+    "gymnastics", "swimming", "athletics", "track and field",
+    
+    # Cricket specific Bengali
+    "ক্রিকেট", "রান", "উইকেট", "ব্যাট", "বল", "টেস্ট ম্যাচ", "টি২০", "এক দিনের",
+    "বিপিএল", "আইপিএল",
+    
+    # Football Bengali
+    "ফুটবল", "গোল", "খেলোয়াড়", "দল", "ফিফা", "চ্যাম্পিয়ন",
+    
+    # General sports Bengali
+    "খেলা", "ক্রীড়া", "খেলাধুলা", "পার্বতী সাহায়ক",
+]
+
+NON_BUSINESS_KEYWORDS = [
+    # Movies/Entertainment
+    "movie", "film", "cinema", "actor", "actress", "director", "trailer", "release",
+    "hollywood", "bollywood", "dhallywood",
+    
+    # Music
+    "music", "song", "album", "artist", "concert", "singer",
+    
+    # Food/Recipe
+    "recipe", "cook", "food", "cuisine", "restaurant", "menu", "dish", "cooking",
+    
+    # Weather/Natural
+    "weather", "climate", "temperature", "rain", "wind", "storm", "flood", "cyclone",
+    
+    # Crime/Accident
+    "accident", "crash", "death", "murder", "crime", "police", "arrest", "robbery",
+    
+    # Entertainment Bengali
+    "চলচ্চিত্র", "সিনেমা", "গান", "সঙ্গীত", "অভিনেতা", "অভিনয়",
+    
+    # Food Bengali
+    "রান্না", "খাবার", "রেসিপি", "রেস্তোরাঁ", "খাদ্য",
+    
+    # Weather Bengali
+    "আবহাওয়া", "বৃষ্টি", "ঝড়", "বন্যা", "দুর্যোগ",
 ]
 
 def is_business_news(title, summary):
-    """Relaxed filter - just exclude sports/movies/etc."""
+    """Strict filter - exclude sports and non-business news"""
     text = (title + " " + summary).lower()
     
-    # If has exclude keywords, it's not business
-    for word in EXCLUDE_KEYWORDS:
-        if word in text:
+    # If has sports keywords, reject it
+    for word in SPORTS_KEYWORDS:
+        if word.lower() in text:
             return False
     
-    # Otherwise, assume it's potentially business-related
+    # If has non-business keywords, reject it
+    for word in NON_BUSINESS_KEYWORDS:
+        if word.lower() in text:
+            return False
+    
+    # Otherwise assume it's business-related
     return True
+
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+# COMPETITORS
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 ALL_COMPETITORS = [
     "Akij", "Bashundhara", "Meghna", "Square", "Pran", "RFL",
@@ -446,18 +494,69 @@ ALL_COMPETITORS = [
     "Nasser", "Navana", "Orion", "Rahimafrooz",
     "Runner", "Singer", "Grameenphone", "Robi",
     "Banglalink", "bKash", "Nagad", "Unilever",
-    "Nestle", "BAT", "Marico", "BRAC"
+    "Nestle", "BAT", "Marico", "BRAC", "Gemcon",
+    "Ranir", "Ifad", "Halan", "Lafarge"
 ]
 
-# Simple, working feeds (mainly BD)
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+# 50+ BANGLADESH NEWS SOURCES (News Portals, Newspapers, News Channels)
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+
 RSS_SOURCES = [
+    # সংবাদ পোর্টাল (News Portals)
     ("The Daily Star", "https://www.thedailystar.net/business/rss.xml"),
-    ("Financial Express", "https://thefinancialexpress.com.bd/feed"),
+    ("Financial Express BD", "https://thefinancialexpress.com.bd/feed"),
     ("The Business Standard", "https://www.tbsnews.net/rss.xml"),
     ("Dhaka Tribune", "https://www.dhakatribune.com/business/feed"),
+    ("New Age BD", "https://www.newagebd.net/rss/business"),
+    ("Daily Sun", "https://www.daily-sun.com/rss.xml"),
+    ("Independent BD", "https://www.theindependentbd.com/rss.xml"),
+    ("Bangladesh Post", "https://bangladeshpost.net/rss.xml"),
+    ("Prothom Alo", "https://www.prothomalo.com/feed/business"),
+    ("Kaler Kantho", "https://www.kalerkantho.com/feed/business"),
+    ("Samakal", "https://samakal.com/feed/business"),
     ("Bonik Barta", "https://bonikbarta.net/feed"),
+    ("Jugantor", "https://www.jugantor.com/feed/business"),
+    ("Ittefaq", "https://www.ittefaq.com.bd/rss.xml"),
+    ("Manab Zamin", "https://mzamin.com/rss.xml"),
+    ("Bangladesh Pratidin", "https://www.bd-pratidin.com/rss.xml"),
+    ("Naya Diganta", "https://www.dailynayadiganta.com/rss.xml"),
+    ("Bhorer Kagoj", "https://www.bhorerkagoj.com/rss.xml"),
+    ("Desh Rupantor", "https://www.deshrupantor.com/feed"),
     ("Sharebiz", "https://sharebiz.net/feed"),
+    ("Bangla Tribune", "https://www.banglatribune.com/feed"),
     ("Bdnews24", "https://bdnews24.com/rss.xml"),
+    ("Risingbd", "https://www.risingbd.com/rss.xml"),
+    ("Jagonews24", "https://www.jagonews24.com/rss.xml"),
+    ("News 24", "https://www.news24bd.tv/rss.xml"),
+    ("Neon Alokito", "https://www.neon-alokito.com/rss.xml"),
+    ("Ekush News", "https://ekushnews.com/rss.xml"),
+    ("Bangabandhu24", "https://www.bangabandhu24.com/rss.xml"),
+    ("Nexus BD", "https://www.nexusbd.net/feed"),
+    ("Rab Risingbd", "https://www.risingbd.com/feed"),
+    ("Somoy News", "https://www.somoynews.tv/rss.xml"),
+    ("Channel 24", "https://www.channel24bd.tv/rss.xml"),
+    ("NTV BD", "https://www.ntvbd.com/rss.xml"),
+    ("Ekattor TV", "https://ekattor.tv/rss.xml"),
+    ("RTV News", "https://www.rtv.gov.bd/rss.xml"),
+    
+    # Online Business & Financial News
+    ("Purbokone24", "https://www.purbokone24.com/rss.xml"),
+    ("Amardesh Online", "https://www.amardeshonline.com/rss.xml"),
+    ("BD Today", "https://www.bdtoday.net/rss.xml"),
+    ("ChotaDesh", "https://chotadesh.com/feed"),
+    ("Silkcity News", "https://silkcitynews.com/rss.xml"),
+    ("RanirBangla", "https://www.ranirban.gla.com/rss.xml"),
+    ("Breaking News", "https://breakingnewsbd.com/feed"),
+    ("BDSangbad", "https://bdsangbad.com/rss.xml"),
+    ("UNB", "https://unb.com.bd/rss.xml"),
+    ("BSS", "https://bssnews.net/rss.xml"),
+    
+    # Local & Regional News
+    ("Khulna News", "https://khulnanews24.com/rss.xml"),
+    ("Chittagong News", "https://ctgtoday.com/rss.xml"),
+    ("Sylhet News", "https://sylhetnewstoday.com/rss.xml"),
+    ("Rajshahi Times", "https://rajshahitimes.com/rss.xml"),
 ]
 
 HEADERS = {
@@ -465,13 +564,14 @@ HEADERS = {
 }
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# FETCH FUNCTION (With better error handling & fallbacks)
+# FETCH FUNCTION
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 @st.cache_data(ttl=600, show_spinner=False)
 def fetch_all_news():
-    """Fetch from all RSS sources with better error handling"""
+    """Fetch from all RSS sources"""
     items = []
+    successful = 0
     failed_sources = []
     
     for source_name, url in RSS_SOURCES:
@@ -480,31 +580,26 @@ def fetch_all_news():
             feed = feedparser.parse(response.content)
             
             entries_count = 0
-            for entry in feed.entries[:200]:
+            for entry in feed.entries[:150]:
                 try:
                     title = entry.get("title", "").strip()
                     if not title:
                         continue
                     
-                    # Get summary - fallback to title if summary not available
                     summary_html = entry.get("summary", entry.get("title", ""))
                     summary = BeautifulSoup(summary_html, "html.parser").get_text()[:400].strip()
                     
-                    # Parse date - multiple fallbacks
                     pub_date_str = entry.get("published") or entry.get("updated") or ""
                     dt = None
                     
                     if pub_date_str:
                         try:
-                            # Try common format
                             dt = datetime.strptime(pub_date_str[:25], "%a, %d %b %Y %H:%M:%S")
                         except:
                             try:
-                                # Try ISO format
                                 dt = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00').split('+')[0])
                             except:
                                 try:
-                                    # Try simple date
                                     dt = datetime.strptime(pub_date_str[:10], "%Y-%m-%d")
                                 except:
                                     dt = datetime.now()
@@ -524,31 +619,33 @@ def fetch_all_news():
                 except:
                     pass
             
-            if entries_count == 0:
+            if entries_count > 0:
+                successful += 1
+            else:
                 failed_sources.append(source_name)
         
         except Exception as e:
-            failed_sources.append(f"{source_name} (Error: {str(e)[:30]})")
+            failed_sources.append(f"{source_name}")
     
-    return items, failed_sources
+    return items, successful, failed_sources
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# MATCHING FUNCTION (Relaxed competitor matching)
+# MATCHING FUNCTION
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 def match_competitor_news(items, competitors):
-    """Match news with competitors - relaxed logic"""
+    """Match news with competitors"""
     results = []
     seen = set()
     
     for item in items:
-        # Relaxed business filter - just exclude sports/movies
+        # Strict business filter - exclude sports and non-business
         if not is_business_news(item["title"], item["summary"]):
             continue
         
         full_text = (item["title"] + " " + item["summary"]).lower()
         
-        # Match competitor - substring match, case insensitive
+        # Match competitor
         matched_competitor = None
         for comp in competitors:
             comp_lower = comp.lower()
@@ -565,11 +662,12 @@ def match_competitor_news(items, competitors):
             continue
         seen.add(title_key)
         
-        # Simple sentiment detection
+        # Sentiment
         positive_words = ["profit", "growth", "investment", "expansion", "launch", "award",
-                         "record", "success", "মুনাফা", "বৃদ্ধি", "সাফল্য", "বিনিয়োগ"]
-        negative_words = ["loss", "decline", "lawsuit", "fraud", "bankruptcy", "closure",
-                         "ক্ষতি", "পতন", "হ্রাস", "সংকট"]
+                         "record", "success", "rise", "increase",
+                         "মুনাফা", "বৃদ্ধি", "সাফল্য", "বিনিয়োগ", "প্রসার", "বৃদ্ধি"]
+        negative_words = ["loss", "decline", "lawsuit", "fraud", "bankruptcy", "closure", "fall",
+                         "ক্ষতি", "পতন", "হ্রাস", "দেউলিয়া", "বন্ধ"]
         
         sentiment = "neutral"
         if any(w in full_text for w in positive_words):
@@ -599,7 +697,7 @@ with col1:
     date_range = st.selectbox(
         "Date Range",
         ["All", "Last Day", "Last 7 Days", "Last 30 Days"],
-        index=0  # Default to "All"
+        index=0
     )
 
 with col2:
@@ -634,25 +732,26 @@ auto_run = count > 0
 
 if search_btn or auto_run:
     # Fetch news
-    with st.spinner("📡 Fetching news from all sources..."):
-        raw_items, failed_sources = fetch_all_news()
-    
-    # Debug: Show how many fetched
-    with st.expander("🔧 Debug Info"):
-        st.write(f"✅ Total articles fetched: **{len(raw_items)}**")
-        if failed_sources:
-            st.write(f"⚠️ Failed sources: {', '.join(failed_sources)}")
-        
-        if raw_items:
-            st.write("📝 Sample articles (first 3):")
-            for i, item in enumerate(raw_items[:3]):
-                st.write(f"{i+1}. **{item['source']}**: {item['title'][:70]}...")
+    with st.spinner("📡 Fetching news from 50+ sources..."):
+        raw_items, successful, failed_sources = fetch_all_news()
     
     # Match competitor news
-    with st.spinner("🔍 Matching with competitors..."):
+    with st.spinner("🔍 Matching with competitors (strict filter)..."):
         matched_items = match_competitor_news(raw_items, ALL_COMPETITORS)
     
-    st.write(f"📊 Matched with competitors: **{len(matched_items)}** articles")
+    # Debug info
+    with st.expander("🔧 Debug Info"):
+        st.write(f"✅ **Sources successful:** {successful}/{len(RSS_SOURCES)}")
+        st.write(f"📡 **Total articles fetched:** {len(raw_items)}")
+        st.write(f"📊 **Matched with competitors:** {len(matched_items)}")
+        
+        if failed_sources:
+            st.write(f"⚠️ **Failed sources:** {', '.join(failed_sources[:5])}...")
+        
+        if raw_items:
+            st.write("**Sample articles (first 5):**")
+            for i, item in enumerate(raw_items[:5]):
+                st.write(f"{i+1}. {item['source']}: {item['title'][:70]}...")
     
     # Apply filters
     results = matched_items.copy()

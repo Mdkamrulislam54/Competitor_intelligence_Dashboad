@@ -56,7 +56,7 @@ p, div, span, label, input, textarea, select, button {
 }
 .logo-name    { font-family:'Playfair Display',serif !important; font-size:1rem; font-weight:700; color:#e8edf3; letter-spacing:.04em; }
 .logo-tag     { font-size:.65rem; color:#4a9eff; letter-spacing:.14em; text-transform:uppercase; }
-.live-badge   { display:flex; align-items:center; gap:7px; font-size:.72rem; color:#475569; letter-spacing:.08em; text-transform:uppercase; }
+.live-badge   { display:flex; align-items:center; gap:7px; font-size:.72rem; color:#94a3b8; letter-spacing:.08em; text-transform:uppercase; }
 .live-dot     { width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:blink 2s infinite; }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
 
@@ -73,7 +73,7 @@ p, div, span, label, input, textarea, select, button {
     color:#f0f4f8; margin-bottom:12px;
 }
 .hero-title em { font-style:normal; color:#4a9eff; }
-.hero-sub { font-size:.92rem; color:#475569; font-weight:300; max-width:520px; line-height:1.75; }
+.hero-sub { font-size:.92rem; color:#94a3b8; font-weight:300; max-width:520px; line-height:1.75; }
 
 /* ── PANEL ── */
 .panel {
@@ -102,7 +102,7 @@ p, div, span, label, input, textarea, select, button {
     padding:18px 14px; text-align:center; position:relative; overflow:hidden;
 }
 .snum { font-family:'Playfair Display',serif !important; font-size:1.9rem; font-weight:800; line-height:1; }
-.slbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#475569; margin-top:5px; }
+.slbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#94a3b8; margin-top:5px; }
 .sbar { position:absolute; bottom:0; left:0; right:0; height:2px; }
 
 /* ── NEWS CARD ── */
@@ -129,13 +129,13 @@ p, div, span, label, input, textarea, select, button {
 .bli { background:rgba(14,165,233,.12); color:#38bdf8; border:1px solid rgba(14,165,233,.2); }
 .bfb { background:rgba(99,102,241,.12); color:#818cf8; border:1px solid rgba(99,102,241,.2); }
 
-.cdate  { margin-left:auto; font-size:.7rem; color:#334155; }
+.cdate  { margin-left:auto; font-size:.7rem; color:#7a90a8; }
 .ctitle {
     font-family:'Playfair Display',serif !important;
     font-size:1rem; font-weight:700; color:#e2e8f0;
     line-height:1.5; margin-bottom:8px;
 }
-.csum { font-size:.84rem; color:#475569; line-height:1.7; margin-bottom:12px; font-weight:300; }
+.csum { font-size:.84rem; color:#8899aa; line-height:1.7; margin-bottom:12px; font-weight:300; }
 .clink {
     font-size:.78rem; font-weight:600; color:#3b82f6; text-decoration:none;
     letter-spacing:.03em; display:inline-flex; align-items:center; gap:4px;
@@ -166,7 +166,7 @@ p, div, span, label, input, textarea, select, button {
     background:#0a1628 !important; border:1px solid rgba(74,158,255,.18) !important;
     border-radius:10px !important; color:#e8edf3 !important;
 }
-[data-testid="stCheckbox"] label { color:#64748b !important; font-size:.82rem !important; }
+[data-testid="stCheckbox"] label { color:#94a3b8 !important; font-size:.82rem !important; }
 [data-testid="stCheckbox"] label:hover { color:#cbd5e1 !important; }
 [data-testid="stButton"] > button {
     background: linear-gradient(135deg,#1d4ed8,#2563eb) !important;
@@ -237,8 +237,8 @@ ALL_COMPETITORS = [
     "Bashundhara Group","Meghna Group","Square Group","Pran RFL","Transcom Group",
     "Abdul Monem","Anwar Group","City Group","Beximco","Partex Group","ACI Limited",
     "BRAC","Gemcon Group","Navana Group","PHP Group","Ha-Meem Group","Epyllion Group",
-    "DBL Group","Team Group","Opex Group","Dutch Bangla Bank","BRAC Bank",
-    "Eastern Bank","Islami Bank","Prime Bank","Mutual Trust Bank","Southeast Bank",
+    "DBL Group","Team Group","Opex Group","Nasser Group","Jamuna Group",
+    "Orion Group","Rahimafrooz","Runner Group","Walton Group","Singer Bangladesh",
     "Grameenphone","Robi","Banglalink","bKash","Nagad","Unilever Bangladesh",
     "Nestlé Bangladesh","British American Tobacco","Marico Bangladesh",
 ]
@@ -416,7 +416,7 @@ if run:
 else:
     st.markdown("""
     <div style="text-align:center;padding:80px 20px;">
-      <div style="font-size:52px;margin-bottom:20px;opacity:.15;color:#4a9eff">◈</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#1e3a5f;font-weight:700;margin-bottom:10px">Intelligence Awaits</div>
-      <p style="color:#1e3a5f;font-size:.88rem">উপরে filters সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন</p>
+      <div style="font-size:52px;margin-bottom:20px;opacity:.4;color:#4a9eff">◈</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#2d5a8a;font-weight:700;margin-bottom:10px">Intelligence Awaits</div>
+      <p style="color:#64748b;font-size:.88rem">উপরে filters সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন</p>
     </div>""", unsafe_allow_html=True)

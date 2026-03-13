@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime, timedelta
 import time
-import re
+import io
 
 st.set_page_config(
     page_title="Competitor Intelligence Hub",
@@ -18,7 +18,7 @@ st.set_page_config(
 count = st_autorefresh(interval=900_000, key="autorefresh")
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# PROFESSIONAL CSS DESIGN
+# PROFESSIONAL CSS DESIGN (same as before)
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 st.markdown("""
@@ -40,7 +40,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 .block-container { padding: 0 3rem 3rem !important; max-width: 1500px !important; }
 #MainMenu, footer, header { visibility: hidden !important; }
 
-/* TOPBAR */
 .topbar {
     background: linear-gradient(135deg, #1a2a3a 0%, #162232 100%);
     border-bottom: 2px solid #2563eb;
@@ -112,7 +111,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     50% { opacity: 0.4; }
 }
 
-/* FILTER SECTION */
 .filter-section {
     background: linear-gradient(135deg, #1a2a3a 0%, #162232 100%);
     border: 1px solid #2563eb;
@@ -131,20 +129,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     letter-spacing: .05em;
 }
 
-.filters-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-@media (max-width: 1200px) {
-    .filters-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* KPI CARDS */
 .kpi-section {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -171,7 +155,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 .kpi-card:hover {
     border-color: #3b82f6;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
 }
 
 .kpi-number {
@@ -190,7 +173,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     font-weight: 600;
 }
 
-/* NEWS CARDS */
 .section-header {
     display: flex;
     align-items: center;
@@ -224,19 +206,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     padding: 24px;
     margin-bottom: 16px;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.news-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -100px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
-    pointer-events: none;
 }
 
 .news-card:hover {
@@ -250,8 +219,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
-    position: relative;
-    z-index: 1;
 }
 
 .badge {
@@ -271,31 +238,26 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 .badge-competitor {
     background: rgba(37, 99, 235, 0.2);
     color: #60a5fa;
-    border-color: rgba(37, 99, 235, 0.4);
 }
 
 .badge-source {
     background: rgba(107, 114, 128, 0.15);
     color: #d1d5db;
-    border-color: rgba(107, 114, 128, 0.3);
 }
 
 .badge-positive {
     background: rgba(16, 185, 129, 0.15);
     color: #10b981;
-    border-color: rgba(16, 185, 129, 0.3);
 }
 
 .badge-negative {
     background: rgba(220, 38, 38, 0.15);
     color: #ef4444;
-    border-color: rgba(220, 38, 38, 0.3);
 }
 
 .badge-neutral {
     background: rgba(107, 114, 128, 0.15);
     color: #9ca3af;
-    border-color: rgba(107, 114, 128, 0.3);
 }
 
 .news-header {
@@ -304,8 +266,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 12px;
-    position: relative;
-    z-index: 1;
 }
 
 .news-title {
@@ -324,7 +284,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     padding: 5px 12px;
     font-size: .7rem;
     white-space: nowrap;
-    flex-shrink: 0;
 }
 
 .news-summary {
@@ -332,18 +291,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #9ca3af;
     line-height: 1.7;
     margin-bottom: 14px;
-    border-left: 2px solid rgba(37, 99, 235, 0.2);
-    padding-left: 12px;
-    position: relative;
-    z-index: 1;
-}
-
-.news-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 1;
 }
 
 .read-link {
@@ -366,19 +313,11 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #60a5fa;
 }
 
-.export-section {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-/* STREAMLIT OVERRIDES */
 [data-testid="stSelectbox"] label {
     color: #9ca3af !important;
     font-size: .85rem !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
-    letter-spacing: .03em !important;
 }
 
 [data-testid="stSelectbox"] > div > div {
@@ -395,18 +334,14 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     border-radius: 8px !important;
     padding: 12px 28px !important;
     font-weight: 700 !important;
-    font-size: .9rem !important;
     text-transform: uppercase !important;
-    letter-spacing: .03em !important;
     box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
-    transition: all 0.2s !important;
     width: 100% !important;
 }
 
 [data-testid="stButton"] > button:hover {
     background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
 }
 
 [data-testid="stDownloadButton"] > button {
@@ -415,37 +350,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     border: none !important;
     border-radius: 8px !important;
     padding: 10px 20px !important;
-    font-weight: 600 !important;
-    font-size: .85rem !important;
-    width: auto !important;
     margin: 4px !important;
-}
-
-[data-testid="stDownloadButton"] > button:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-}
-
-[data-testid="stWarning"] {
-    background: rgba(220, 38, 38, 0.1) !important;
-    border: 1px solid rgba(220, 38, 38, 0.3) !important;
-    border-radius: 8px !important;
-}
-
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #0f1419;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #2563eb;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #1d4ed8;
 }
 
 .empty-state {
@@ -466,9 +371,17 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #9ca3af;
 }
 
-.empty-sub {
-    font-size: .9rem;
-    color: #6b7280;
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f1419;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2563eb;
+    border-radius: 3px;
 }
 
 </style>
@@ -497,158 +410,145 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# STRICT BUSINESS FILTER KEYWORDS (No sports, recipes, etc.)
-# ══════════════════════════════════════��═════════════════════════════════════════════════════════════
+# RELAXED BUSINESS FILTER (No longer too strict)
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-BUSINESS_KEYWORDS = [
-    # English
-    "business", "corporate", "industry", "finance", "investment", "ipo", "shares",
-    "stock", "market", "factory", "production", "plant", "manufacturing", "expansion",
-    "deal", "merger", "acquisition", "partnership", "joint venture", "collaboration",
-    "sales", "revenue", "profit", "loss", "earnings", "financial", "quarterly",
-    "annual", "growth", "decline", "trade", "export", "import", "tariff",
-    "technology", "innovation", "project", "launch", "announcement", "company",
-    "group", "corporation", "enterprise", "startup", "founder", "investor",
-    "chairman", "ceo", "officer", "director", "board", "management", "leadership",
-    "office", "headquarters", "subsidiary", "division", "unit", "brand",
-    "product", "service", "contract", "tender", "bid", "agreement",
-    
-    # Bengali
-    "ব্যবসা", "কোম্পানি", "শিল্প", "আর্থিক", "বিনিয়োগ", "শেয়ার", "বাজার",
-    "কারখানা", "উৎপাদন", "সম্প্রসারণ", "চুক্তি", "অধিগ্রহণ", "বিক্রয়", "মুনাফা",
-    "ক্ষতি", "রপ্তানি", "আমদানি", "প্রকল্প", "উদ্ভাবন", "পণ্য", "সেবা",
-    "পরিচালক", "চেয়ারম্যান", "সিইও", "নেতৃত্ব", "ঘোষণা", "সদর দপ্তর",
-    "অংশীদারিত্ব", "সহযোগিতা", "কর্মক্ষমতা", "দক্ষতা", "উন্নয়ন", "বৃদ্ধি"
-]
-
+# Exclude only obvious non-business news
 EXCLUDE_KEYWORDS = [
-    # English
-    "cricket", "football", "soccer", "sports", "match", "game", "player",
-    "team", "score", "goal", "win", "loss", "tournament", "league",
+    "cricket", "football", "soccer", "sports", "match", "game", "player", "goal",
     "movie", "film", "cinema", "actress", "actor", "music", "song",
-    "recipe", "cook", "food", "diet", "restaurant", "menu",
-    "weather", "climate", "temperature", "rain", "flood", "storm",
-    "accident", "crash", "death", "murder", "crime", "police",
-    "election", "politics", "politician", "vote", "campaign",
-    
-    # Bengali
-    "ক্রিকেট", "ফুটবল", "খেলা", "ম্যাচ", "গোল", "দল", "খেলোয়াড়",
-    "চলচ্চিত্র", "সিনেমা", "গান", "সঙ্গীত", "অভিনেতা",
-    "রান্না", "খাবার", "রেসিপি", "রেস্তোরাঁ",
-    "আবহাওয়া", "বৃষ্টি", "বন্যা", "ঝড়",
-    "দুর্ঘটনা", "অপরাধ", "মৃত্যু", "পুলিশ"
+    "recipe", "cook", "food", "diet",
+    "weather", "climate", "temperature",
+    "ক্রিকেট", "ফুটবল", "খেলা", "গোল", "দল",
+    "চলচ্চিত্র", "সিনেমা", "গান",
+    "রান্না", "খাবার",
+    "আবহাওয়া"
 ]
 
-def strict_business_filter(title, summary):
-    """Strict filter: exclude non-business, include business keywords"""
+def is_business_news(title, summary):
+    """Relaxed filter - just exclude sports/movies/etc."""
     text = (title + " " + summary).lower()
     
-    # First check exclusions
+    # If has exclude keywords, it's not business
     for word in EXCLUDE_KEYWORDS:
-        if word.lower() in text:
+        if word in text:
             return False
     
-    # Then check business keywords present
-    for word in BUSINESS_KEYWORDS:
-        if word.lower() in text:
-            return True
-    
-    return False
-
-# ════════════════════════════════════════════════════════════════════════════════════════════════════
-# COMPETITORS & SOURCES
-# ════════════════════════════════════════════════════════════════════════════════════════════════════
+    # Otherwise, assume it's potentially business-related
+    return True
 
 ALL_COMPETITORS = [
-    "Akij Group", "Bashundhara Group", "Meghna Group", "Square Pharmaceuticals", "Pran-RFL",
-    "Transcom", "Walton Electronics", "Beximco", "ACI Limited", "City Group",
-    "Jamuna Group", "Abul Khair Group", "Holcim Bangladesh", "Confidence Cement",
-    "Abdul Monem Limited", "Anwar Group", "Partex Group", "PHP Group",
-    "Ha-Meem Group", "Epyllion Group", "DBL Group", "Opex Group",
-    "Nasser Group", "Navana Limited", "Orion Group", "Rahimafrooz",
-    "Runner Automobiles", "Singer Bangladesh", "Grameenphone", "Robi",
-    "Banglalink", "bKash", "Nagad", "Unilever Bangladesh",
-    "Nestle Bangladesh", "British American Tobacco", "Marico Bangladesh", "BRAC"
+    "Akij", "Bashundhara", "Meghna", "Square", "Pran", "RFL",
+    "Transcom", "Walton", "Beximco", "ACI", "City Group",
+    "Jamuna", "Abul Khair", "Holcim", "Confidence",
+    "Abdul Monem", "Anwar", "Partex", "PHP",
+    "Ha-Meem", "Epyllion", "DBL", "Opex",
+    "Nasser", "Navana", "Orion", "Rahimafrooz",
+    "Runner", "Singer", "Grameenphone", "Robi",
+    "Banglalink", "bKash", "Nagad", "Unilever",
+    "Nestle", "BAT", "Marico", "BRAC"
 ]
 
+# Simple, working feeds (mainly BD)
 RSS_SOURCES = [
-    # Bangladesh News
     ("The Daily Star", "https://www.thedailystar.net/business/rss.xml"),
-    ("Financial Express BD", "https://thefinancialexpress.com.bd/feed"),
+    ("Financial Express", "https://thefinancialexpress.com.bd/feed"),
     ("The Business Standard", "https://www.tbsnews.net/rss.xml"),
     ("Dhaka Tribune", "https://www.dhakatribune.com/business/feed"),
-    ("Prothom Alo", "https://www.prothomalo.com/feed/business"),
-    ("Kaler Kantho", "https://www.kalerkantho.com/feed/business"),
     ("Bonik Barta", "https://bonikbarta.net/feed"),
     ("Sharebiz", "https://sharebiz.net/feed"),
     ("Bdnews24", "https://bdnews24.com/rss.xml"),
-    # International News (Financial)
-    ("Reuters Business", "https://www.reuters.com/finance/2024"),
-    ("Bloomberg Top News", "https://www.bloomberg.com/feed/news/"),
 ]
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# FETCH & MATCHING FUNCTIONS
+# FETCH FUNCTION (With better error handling & fallbacks)
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-@st.cache_data(ttl=900, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def fetch_all_news():
-    """Fetch from all RSS sources"""
+    """Fetch from all RSS sources with better error handling"""
     items = []
-    for name, url in RSS_SOURCES:
-        try:
-            resp = requests.get(url, timeout=20, headers=HEADERS)
-            feed = feedparser.parse(resp.content)
-            for entry in feed.entries[:250]:
-                title = entry.get("title", "").strip()
-                summary_html = entry.get("summary", "")
-                summary = BeautifulSoup(summary_html, "html.parser").get_text()[:400].strip()
-                
-                if not title:
-                    continue
-                
-                # Parse date
-                pub_date = entry.get("published") or entry.get("updated") or ""
-                try:
-                    dt = datetime.strptime(pub_date[:25].strip(), "%a, %d %b %Y %H:%M:%S").replace(tzinfo=None)
-                except:
-                    try:
-                        dt = datetime.strptime(pub_date[:10], "%Y-%m-%d")
-                    except:
-                        dt = datetime.now()
-                
-                link = entry.get("link", "#")
-                
-                items.append({
-                    "title": title,
-                    "summary": summary,
-                    "link": link,
-                    "date_dt": dt,
-                    "source": name,
-                })
-        except Exception as e:
-            print(f"❌ Error fetching {name}: {str(e)[:50]}")
-            pass
+    failed_sources = []
     
-    return items
+    for source_name, url in RSS_SOURCES:
+        try:
+            response = requests.get(url, timeout=15, headers=HEADERS)
+            feed = feedparser.parse(response.content)
+            
+            entries_count = 0
+            for entry in feed.entries[:200]:
+                try:
+                    title = entry.get("title", "").strip()
+                    if not title:
+                        continue
+                    
+                    # Get summary - fallback to title if summary not available
+                    summary_html = entry.get("summary", entry.get("title", ""))
+                    summary = BeautifulSoup(summary_html, "html.parser").get_text()[:400].strip()
+                    
+                    # Parse date - multiple fallbacks
+                    pub_date_str = entry.get("published") or entry.get("updated") or ""
+                    dt = None
+                    
+                    if pub_date_str:
+                        try:
+                            # Try common format
+                            dt = datetime.strptime(pub_date_str[:25], "%a, %d %b %Y %H:%M:%S")
+                        except:
+                            try:
+                                # Try ISO format
+                                dt = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00').split('+')[0])
+                            except:
+                                try:
+                                    # Try simple date
+                                    dt = datetime.strptime(pub_date_str[:10], "%Y-%m-%d")
+                                except:
+                                    dt = datetime.now()
+                    else:
+                        dt = datetime.now()
+                    
+                    link = entry.get("link", "#")
+                    
+                    items.append({
+                        "title": title,
+                        "summary": summary,
+                        "link": link,
+                        "date_dt": dt,
+                        "source": source_name,
+                    })
+                    entries_count += 1
+                except:
+                    pass
+            
+            if entries_count == 0:
+                failed_sources.append(source_name)
+        
+        except Exception as e:
+            failed_sources.append(f"{source_name} (Error: {str(e)[:30]})")
+    
+    return items, failed_sources
+
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+# MATCHING FUNCTION (Relaxed competitor matching)
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 def match_competitor_news(items, competitors):
-    """Match news with competitors - strict business filter"""
+    """Match news with competitors - relaxed logic"""
     results = []
     seen = set()
     
     for item in items:
-        # Strict business filter
-        if not strict_business_filter(item["title"], item["summary"]):
+        # Relaxed business filter - just exclude sports/movies
+        if not is_business_news(item["title"], item["summary"]):
             continue
         
         full_text = (item["title"] + " " + item["summary"]).lower()
         
-        # Match competitor
+        # Match competitor - substring match, case insensitive
         matched_competitor = None
         for comp in competitors:
             comp_lower = comp.lower()
@@ -665,11 +565,11 @@ def match_competitor_news(items, competitors):
             continue
         seen.add(title_key)
         
-        # Sentiment
-        positive_words = ["profit", "growth", "investment", "expansion", "award", "record",
-                         "মুনাফা", "প্রবৃদ্ধি", "বৃদ্ধি", "বিনিয়োগ", "সাফল্য"]
-        negative_words = ["loss", "decline", "lawsuit", "fraud", "bankruptcy", "layoff",
-                         "ক্ষতি", "পতন", "দেউলিয়া", "হ্রাস"]
+        # Simple sentiment detection
+        positive_words = ["profit", "growth", "investment", "expansion", "launch", "award",
+                         "record", "success", "মুনাফা", "বৃদ্ধি", "সাফল্য", "বিনিয়োগ"]
+        negative_words = ["loss", "decline", "lawsuit", "fraud", "bankruptcy", "closure",
+                         "ক্ষতি", "পতন", "হ্রাস", "সংকট"]
         
         sentiment = "neutral"
         if any(w in full_text for w in positive_words):
@@ -681,13 +581,13 @@ def match_competitor_news(items, competitors):
             **item,
             "competitor": matched_competitor,
             "sentiment": sentiment,
-            "date_str": item["date_dt"].strftime("%d %b %Y")
+            "date_str": item["date_dt"].strftime("%d %b %Y") if item["date_dt"] else "—"
         })
     
     return results
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
-# FILTER SECTION
+# FILTER UI
 # ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 st.markdown('<div class="filter-section">', unsafe_allow_html=True)
@@ -699,13 +599,13 @@ with col1:
     date_range = st.selectbox(
         "Date Range",
         ["All", "Last Day", "Last 7 Days", "Last 30 Days"],
-        index=3
+        index=0  # Default to "All"
     )
 
 with col2:
     competitor = st.selectbox(
         "Competitor",
-        ["All"] + ALL_COMPETITORS
+        ["All"] + sorted(ALL_COMPETITORS)
     )
 
 with col3:
@@ -722,7 +622,7 @@ with col4:
 
 with col5:
     st.markdown("<br>", unsafe_allow_html=True)
-    search_btn = st.button("🔍 Search", use_container_width=True)
+    search_btn = st.button("🔍 Search", use_container_width=True, key="search-btn")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -733,12 +633,26 @@ st.markdown('</div>', unsafe_allow_html=True)
 auto_run = count > 0
 
 if search_btn or auto_run:
-    # Fetch & match
+    # Fetch news
     with st.spinner("📡 Fetching news from all sources..."):
-        raw_items = fetch_all_news()
+        raw_items, failed_sources = fetch_all_news()
     
+    # Debug: Show how many fetched
+    with st.expander("🔧 Debug Info"):
+        st.write(f"✅ Total articles fetched: **{len(raw_items)}**")
+        if failed_sources:
+            st.write(f"⚠️ Failed sources: {', '.join(failed_sources)}")
+        
+        if raw_items:
+            st.write("📝 Sample articles (first 3):")
+            for i, item in enumerate(raw_items[:3]):
+                st.write(f"{i+1}. **{item['source']}**: {item['title'][:70]}...")
+    
+    # Match competitor news
     with st.spinner("🔍 Matching with competitors..."):
         matched_items = match_competitor_news(raw_items, ALL_COMPETITORS)
+    
+    st.write(f"📊 Matched with competitors: **{len(matched_items)}** articles")
     
     # Apply filters
     results = matched_items.copy()
@@ -770,7 +684,7 @@ if search_btn or auto_run:
     
     # Calculate KPIs
     total_news = len(results)
-    total_competitors = len(set(r["competitor"] for r in results))
+    total_competitors = len(set(r["competitor"] for r in results)) if results else 0
     positive = sum(1 for r in results if r["sentiment"] == "positive")
     negative = sum(1 for r in results if r["sentiment"] == "negative")
     neutral = sum(1 for r in results if r["sentiment"] == "neutral")
@@ -834,7 +748,7 @@ if search_btn or auto_run:
         <div class="empty-state">
             <div class="empty-icon">📭</div>
             <div class="empty-text">No Results Found</div>
-            <div class="empty-sub">Try adjusting filters or select "All" options</div>
+            <div class="empty-sub">Try adjusting filters or select different options</div>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -859,45 +773,42 @@ if search_btn or auto_run:
                     <div class="date-pill">📅 {item['date_str']}</div>
                 </div>
                 <div class="news-summary">{summary_text}</div>
-                <div class="news-footer">
-                    <a class="read-link" href="{item['link']}" target="_blank">Read Full Article →</a>
-                </div>
+                <a class="read-link" href="{item['link']}" target="_blank">📖 Read Full Article →</a>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("---")
         
-        # Export section
-        st.markdown('<div class="export-section">', unsafe_allow_html=True)
+        # Export
+        st.subheader("📥 Export Data")
+        col1, col2 = st.columns(2)
         
-        # CSV Export
-        df = pd.DataFrame(results)[["competitor", "title", "source", "date_str", "sentiment", "link"]]
-        df.columns = ["Competitor", "Headline", "Source", "Date", "Sentiment", "Link"]
+        with col1:
+            df = pd.DataFrame(results)[["competitor", "title", "source", "date_str", "sentiment", "link"]]
+            df.columns = ["Competitor", "Headline", "Source", "Date", "Sentiment", "Link"]
+            
+            csv_data = df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "📥 Export as CSV",
+                csv_data,
+                "competitor_intelligence.csv",
+                "text/csv",
+                key="csv-download"
+            )
         
-        csv_data = df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "📥 Export as CSV",
-            csv_data,
-            "competitor_intelligence.csv",
-            "text/csv",
-            key="csv-download"
-        )
-        
-        # Excel Export
-        import io
-        excel_buffer = io.BytesIO()
-        df.to_excel(excel_buffer, index=False, sheet_name="News")
-        excel_buffer.seek(0)
-        
-        st.download_button(
-            "📊 Export as Excel",
-            excel_buffer.getvalue(),
-            "competitor_intelligence.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="excel-download"
-        )
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        with col2:
+            # Excel export
+            excel_buffer = io.BytesIO()
+            df.to_excel(excel_buffer, index=False, sheet_name="News")
+            excel_buffer.seek(0)
+            
+            st.download_button(
+                "📊 Export as Excel",
+                excel_buffer.getvalue(),
+                "competitor_intelligence.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="excel-download"
+            )
 
 else:
     st.markdown("""

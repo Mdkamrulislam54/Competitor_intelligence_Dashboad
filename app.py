@@ -337,106 +337,142 @@ def match_news(items, competitors):
                 results.append(r); break
     return results
 
-# FILTER PANEL
-st.markdown('<div class="panel"><div class="plabel">Search & Filter</div>', unsafe_allow_html=True)
-c1,c2,c3 = st.columns([2,3,2], gap="large")
+# FILTER PANEL — compact, hidden competitors/sources
+st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-with c1:
-    st.markdown('<div class="plabel">🏢 Competitors</div>', unsafe_allow_html=True)
-    comp_input = st.text_area("c",value="\n".join(ALL_COMPETITORS),height=280,label_visibility="collapsed")
-    competitors=[x.strip() for x in comp_input.strip().splitlines() if x.strip()]
+fa, fb, fc, fd, fe = st.columns([2, 2, 2, 2, 2], gap="medium")
+with fa:
+    date_opt = st.selectbox("📅 সময়কাল", ["আজকের","গত ৩ দিন","গত ৭ দিন","গত ৩০ দিন","সব"], index=2)
+with fb:
+    sent_opt = st.selectbox("💬 Sentiment", ["সব","positive","negative","neutral"])
+with fc:
+    comp_opt = st.selectbox("🏢 Competitor", ["সব"] + ALL_COMPETITORS)
+with fd:
+    lang_opt = st.selectbox("🌐 Source", ["সব","English","বাংলা","LinkedIn","Facebook"])
+with fe:
+    st.markdown("<br>", unsafe_allow_html=True)
+    run = st.button("◈  Search করুন", use_container_width=True)
 
-with c2:
-    st.markdown('<div class="plabel">📡 News Sources</div>', unsafe_allow_html=True)
-    ra,rb,rc=st.columns(3)
-    sel=[]
-    for i,name in enumerate(RSS_FEEDS):
-        icon=RSS_FEEDS[name][2]
-        ref=[ra,rb,rc][i%3]
-        if ref.checkbox(f"{icon} {name}", value=(i<10), key=f"k{i}"): sel.append(name)
-
-with c3:
-    st.markdown('<div class="plabel">🔍 Filters</div>', unsafe_allow_html=True)
-    date_opt=st.selectbox("📅 সময়কাল",["আজকের","গত ৩ দিন","গত ৭ দিন","গত ৩০ দিন","সব"],index=2)
-    sent_opt=st.selectbox("💬 Sentiment",["সব","positive","negative","neutral"])
-    comp_opt=st.selectbox("🏢 Competitor",["সব"]+competitors)
-    lang_opt=st.selectbox("🌐 Source Type",["সব","English","বাংলা","LinkedIn","Facebook"])
-    st.markdown("<br>",unsafe_allow_html=True)
-    run=st.button("◈  Search করুন", use_container_width=True)
+# Hidden: all sources always on, all competitors always active
+sel = [k for k in RSS_FEEDS]
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # RESULTS
 if run:
-    news_src=[s for s in sel if RSS_FEEDS[s][0]!="__social__"]
-    show_social=any(RSS_FEEDS[s][0]=="__social__" for s in sel)
+    news_src = [s for s in sel if RSS_FEEDS[s][0] != "__social__"]
+    show_social = any(RSS_FEEDS[s][0] == "__social__" for s in sel)
 
     with st.spinner("📡 News সংগ্রহ হচ্ছে..."):
-        raw=fetch_feeds(tuple(news_src)) if news_src else []
+        raw = fetch_feeds(tuple(news_src)) if news_src else []
     with st.spinner("🔍 Matching করা হচ্ছে..."):
-        results=match_news(raw, competitors)
-        if show_social: results+=social_items(competitors)
+        results = match_news(raw, ALL_COMPETITORS)
+        if show_social:
+            results += social_items(ALL_COMPETITORS)
 
-    days_map={"আজকের":1,"গত ৩ দিন":3,"গত ৭ দিন":7,"গত ৩০ দিন":30,"সব":None}
-    days=days_map[date_opt]
+    days_map = {"আজকের":1,"গত ৩ দিন":3,"গত ৭ দিন":7,"গত ৩০ দিন":30,"সব":None}
+    days = days_map[date_opt]
     if days:
-        cut=datetime.now()-timedelta(days=days)
-        results=[r for r in results if r.get("date_dt") and r["date_dt"]>=cut]
-    if sent_opt!="সব": results=[r for r in results if r["sentiment"]==sent_opt]
-    if comp_opt!="সব": results=[r for r in results if r["competitor"]==comp_opt]
-    if lang_opt!="সব": results=[r for r in results if r.get("lang","")==lang_opt]
-    results.sort(key=lambda x:x.get("date_dt") or datetime.min, reverse=True)
+        cut_dt = datetime.now() - timedelta(days=days)
+        results = [r for r in results if r.get("date_dt") and r["date_dt"] >= cut_dt]
+    if sent_opt != "সব": results = [r for r in results if r["sentiment"] == sent_opt]
+    if comp_opt != "সব": results = [r for r in results if r["competitor"] == comp_opt]
+    if lang_opt != "সব": results = [r for r in results if r.get("lang","") == lang_opt]
+    results.sort(key=lambda x: x.get("date_dt") or datetime.min, reverse=True)
 
-    pos=sum(1 for r in results if r["sentiment"]=="positive")
-    neg=sum(1 for r in results if r["sentiment"]=="negative")
-    neu=sum(1 for r in results if r["sentiment"]=="neutral")
-    uniq=len(set(r["competitor"] for r in results))
+    pos  = sum(1 for r in results if r["sentiment"] == "positive")
+    neg  = sum(1 for r in results if r["sentiment"] == "negative")
+    neu  = sum(1 for r in results if r["sentiment"] == "neutral")
+    uniq = len(set(r["competitor"] for r in results))
 
+    # KPI CARDS
     st.markdown(f"""
     <div class="stats">
-      <div class="scard"><div class="snum" style="color:#4a9eff">{len(results)}</div><div class="slbl">মোট নিউজ</div><div class="sbar" style="background:linear-gradient(90deg,#4a9eff,transparent)"></div></div>
-      <div class="scard"><div class="snum" style="color:#94a3b8">{uniq}</div><div class="slbl">Competitors</div><div class="sbar" style="background:linear-gradient(90deg,#94a3b8,transparent)"></div></div>
-      <div class="scard"><div class="snum" style="color:#4ade80">{pos}</div><div class="slbl">Positive</div><div class="sbar" style="background:linear-gradient(90deg,#4ade80,transparent)"></div></div>
-      <div class="scard"><div class="snum" style="color:#f87171">{neg}</div><div class="slbl">Negative</div><div class="sbar" style="background:linear-gradient(90deg,#f87171,transparent)"></div></div>
-      <div class="scard"><div class="snum" style="color:#64748b">{neu}</div><div class="slbl">Neutral</div><div class="sbar" style="background:linear-gradient(90deg,#64748b,transparent)"></div></div>
+      <div class="scard">
+        <div class="snum" style="color:#4a9eff">{len(results)}</div>
+        <div class="slbl">মোট নিউজ</div>
+        <div class="sbar" style="background:linear-gradient(90deg,#4a9eff,transparent)"></div>
+      </div>
+      <div class="scard">
+        <div class="snum" style="color:#b0bec8">{uniq}</div>
+        <div class="slbl">Competitors</div>
+        <div class="sbar" style="background:linear-gradient(90deg,#b0bec8,transparent)"></div>
+      </div>
+      <div class="scard">
+        <div class="snum" style="color:#4ade80">{pos}</div>
+        <div class="slbl">Positive</div>
+        <div class="sbar" style="background:linear-gradient(90deg,#4ade80,transparent)"></div>
+      </div>
+      <div class="scard">
+        <div class="snum" style="color:#f87171">{neg}</div>
+        <div class="slbl">Negative</div>
+        <div class="sbar" style="background:linear-gradient(90deg,#f87171,transparent)"></div>
+      </div>
+      <div class="scard">
+        <div class="snum" style="color:#94a3b8">{neu}</div>
+        <div class="slbl">Neutral</div>
+        <div class="sbar" style="background:linear-gradient(90deg,#94a3b8,transparent)"></div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
-    rc_badge={"results":f'<span style="font-size:.74rem;color:#4a9eff;background:rgba(74,158,255,.1);padding:4px 14px;border-radius:100px;border:1px solid rgba(74,158,255,.2)">{len(results)} results</span>'}
-    st.markdown(f'<div class="sechead"><h3>Latest Intelligence</h3>{rc_badge["results"]}</div>', unsafe_allow_html=True)
+    # SECTION HEAD
+    st.markdown(f'''
+    <div class="sechead">
+      <h3>Latest Business Intelligence</h3>
+      <span style="font-size:.74rem;color:#4a9eff;background:rgba(74,158,255,.1);
+             padding:4px 14px;border-radius:100px;border:1px solid rgba(74,158,255,.2);
+             white-space:nowrap">{len(results)} results</span>
+    </div>''', unsafe_allow_html=True)
 
     if not results:
-        st.info("😔 এই filter-এ কোনো news পাওয়া যায়নি। 'সব' বেছে আবার চেষ্টা করুন।")
+        st.info("😔 এই filter-এ কোনো business news পাওয়া যায়নি। Date range বাড়িয়ে আবার চেষ্টা করুন।")
     else:
-        SB={"positive":'<span class="badge bp">▲ Positive</span>',
-            "negative":'<span class="badge bn">▼ Negative</span>',
-            "neutral": '<span class="badge bne">● Neutral</span>'}
-        LB={"LinkedIn":'<span class="badge bli">💼 LinkedIn</span>',
-            "Facebook":'<span class="badge bfb">👥 Facebook</span>'}
+        SB = {
+            "positive": '<span class="badge bp">▲ Positive</span>',
+            "negative": '<span class="badge bn">▼ Negative</span>',
+            "neutral":  '<span class="badge bne">● Neutral</span>',
+        }
+        LB = {
+            "LinkedIn": '<span class="badge bli">💼 LinkedIn</span>',
+            "Facebook": '<span class="badge bfb">👥 Facebook</span>',
+        }
+
         for item in results:
-            lang=item.get("lang","")
-            src_b=LB.get(lang,f'<span class="badge bs">{item.get("icon","🗞️")} {item["source"]}</span>')
+            lang = item.get("lang","")
+            src_b = LB.get(lang, f'<span class="badge bs">{item.get("icon","🗞️")} {item["source"]}</span>')
+            summary_text = item["summary"][:200] + ("…" if len(item["summary"]) > 200 else "")
             st.markdown(f"""
             <div class="ncard">
               <div class="badges">
                 <span class="badge bc">{item['competitor']}</span>
-                {src_b}{SB.get(item['sentiment'],'')}
+                {src_b}
+                {SB.get(item['sentiment'],'')}
                 <span class="cdate">🗓 {item['date_str']}</span>
               </div>
               <div class="ctitle">{item['title']}</div>
-              <div class="csum">{item['summary'][:230]}{'…' if len(item['summary'])>230 else ''}</div>
-              <a class="clink" href="{item['link']}" target="_blank">পড়ুন / দেখুন &nbsp;→</a>
-            </div>""", unsafe_allow_html=True)
+              <div class="csum">{summary_text}</div>
+              <a class="clink" href="{item['link']}" target="_blank">সম্পূর্ণ পড়ুন &nbsp;→</a>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("---")
-        df=pd.DataFrame(results)[["competitor","title","source","date_str","sentiment","link"]]
-        df.columns=["Competitor","Headline","Source","Date","Sentiment","Link"]
-        st.download_button("⬇ CSV Export করুন", df.to_csv(index=False).encode("utf-8"),
+        df = pd.DataFrame(results)[["competitor","title","source","date_str","sentiment","link"]]
+        df.columns = ["Competitor","Headline","Source","Date","Sentiment","Link"]
+        st.download_button("⬇ CSV Export করুন",
+                           df.to_csv(index=False).encode("utf-8"),
                            "akij_intelligence.csv","text/csv")
+
 else:
     st.markdown("""
     <div style="text-align:center;padding:80px 20px;">
       <div style="font-size:52px;margin-bottom:20px;opacity:.4;color:#4a9eff">◈</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#2d5a8a;font-weight:700;margin-bottom:10px">Intelligence Awaits</div>
-      <p style="color:#8fa0b4;font-size:.88rem">উপরে filters সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন</p>
-    </div>""", unsafe_allow_html=True)
+      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;
+                  color:#2d5a8a;font-weight:700;margin-bottom:10px">
+        Intelligence Awaits
+      </div>
+      <p style="color:#8fa0b4;font-size:.88rem">
+        উপরে filter সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন
+      </p>
+    </div>
+    """, unsafe_allow_html=True)

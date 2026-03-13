@@ -227,7 +227,6 @@ RSS_FEEDS = {
     "Samakal (Business)":               ("https://samakal.com/feed/business",                          "বাংলা", "🗞️"),
     "Bonik Barta":                      ("https://bonikbarta.net/feed",                                "বাংলা", "🗞️"),
     "LinkedIn BD":                      ("__social__",                                                  "LinkedIn","💼"),
-    "Facebook BD":                      ("__social__",                                                  "Facebook","👥"),
 }
 
 ALL_COMPETITORS = [
@@ -306,19 +305,47 @@ def fetch_feeds(keys):
     return items
 
 def social_items(competitors):
-    out=[]
+    """Fetch LinkedIn company news via Google RSS for each competitor"""
+    out = []
     for comp in competitors:
-        q=comp.replace(" ","+")
-        out.append({"title":f'LinkedIn: "{comp}" সম্পর্কে সর্বশেষ posts ও updates',
-            "link":f"https://www.linkedin.com/search/results/content/?keywords={q}",
-            "summary":f"{comp}-এর LinkedIn posts, company news, executive updates এবং industry coverage দেখতে এখানে click করুন।",
-            "date_dt":datetime.now(),"date_str":"আজকের",
-            "source":"LinkedIn BD","lang":"LinkedIn","icon":"💼","competitor":comp,"sentiment":"neutral"})
-        out.append({"title":f'Facebook: "{comp}" সম্পর্কে সর্বশেষ posts ও আলোচনা',
-            "link":f"https://www.facebook.com/search/posts/?q={q}",
-            "summary":f"Facebook-এ {comp}-এর official page, public posts এবং সাম্প্রতিক আলোচনা দেখতে এখানে click করুন।",
-            "date_dt":datetime.now(),"date_str":"আজকের",
-            "source":"Facebook BD","lang":"Facebook","icon":"👥","competitor":comp,"sentiment":"neutral"})
+        q = comp.replace(" ", "+")
+        # Use Google News RSS to get real LinkedIn/business news about competitor
+        google_rss = f"https://news.google.com/rss/search?q={q}+business+bangladesh&hl=en-BD&gl=BD&ceid=BD:en"
+        try:
+            import feedparser as _fp
+            feed = _fp.parse(google_rss)
+            for e in feed.entries[:3]:
+                from bs4 import BeautifulSoup as _BS
+                summ = _BS(e.get("summary",""), "html.parser").get_text()[:250].strip()
+                pub  = e.get("published","")
+                dt   = parse_dt(pub)
+                out.append({
+                    "title":   e.get("title","").strip(),
+                    "link":    e.get("link","#"),
+                    "summary": summ if summ else f"{comp} সম্পর্কে সাম্প্রতিক ব্যবসায়িক সংবাদ।",
+                    "date_dt": dt,
+                    "date_str":dt.strftime("%d %b %Y") if dt else "সাম্প্রতিক",
+                    "source":  "Google News",
+                    "lang":    "English",
+                    "icon":    "🔍",
+                    "competitor": comp,
+                    "sentiment":  get_sent(e.get("title","") + " " + summ),
+                })
+        except:
+            pass
+        # LinkedIn search link as fallback card (no fake summary)
+        out.append({
+            "title":   f"{comp} — LinkedIn Latest Updates",
+            "link":    f"https://www.linkedin.com/search/results/content/?keywords={q}+bangladesh",
+            "summary": f"Click to view {comp}'s latest LinkedIn posts, executive announcements, hiring news and company updates.",
+            "date_dt": datetime.now(),
+            "date_str":"আজকের",
+            "source":  "LinkedIn BD",
+            "lang":    "LinkedIn",
+            "icon":    "💼",
+            "competitor": comp,
+            "sentiment":  "neutral",
+        })
     return out
 
 def match_news(items, competitors):

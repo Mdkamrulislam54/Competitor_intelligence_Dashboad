@@ -21,7 +21,7 @@ html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"] {
     background-color: #0d1b2a !important;
-    color: #e8edf3 !important;
+    color: #dde4ed !important;
 }
 [data-testid="stHeader"]         { background: transparent !important; }
 [data-testid="stSidebar"]        { display: none !important; }
@@ -56,7 +56,7 @@ p, div, span, label, input, textarea, select, button {
 }
 .logo-name    { font-family:'Playfair Display',serif !important; font-size:1rem; font-weight:700; color:#e8edf3; letter-spacing:.04em; }
 .logo-tag     { font-size:.65rem; color:#4a9eff; letter-spacing:.14em; text-transform:uppercase; }
-.live-badge   { display:flex; align-items:center; gap:7px; font-size:.72rem; color:#94a3b8; letter-spacing:.08em; text-transform:uppercase; }
+.live-badge   { display:flex; align-items:center; gap:7px; font-size:.72rem; color:#b8c4d0; letter-spacing:.08em; text-transform:uppercase; }
 .live-dot     { width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:blink 2s infinite; }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
 
@@ -73,7 +73,7 @@ p, div, span, label, input, textarea, select, button {
     color:#f0f4f8; margin-bottom:12px;
 }
 .hero-title em { font-style:normal; color:#4a9eff; }
-.hero-sub { font-size:.92rem; color:#94a3b8; font-weight:300; max-width:520px; line-height:1.75; }
+.hero-sub { font-size:.92rem; color:#b8c4d0; font-weight:300; max-width:520px; line-height:1.75; }
 
 /* ── PANEL ── */
 .panel {
@@ -102,7 +102,7 @@ p, div, span, label, input, textarea, select, button {
     padding:18px 14px; text-align:center; position:relative; overflow:hidden;
 }
 .snum { font-family:'Playfair Display',serif !important; font-size:1.9rem; font-weight:800; line-height:1; }
-.slbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#94a3b8; margin-top:5px; }
+.slbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#b0bec8; margin-top:5px; }
 .sbar { position:absolute; bottom:0; left:0; right:0; height:2px; }
 
 /* ── NEWS CARD ── */
@@ -129,13 +129,13 @@ p, div, span, label, input, textarea, select, button {
 .bli { background:rgba(14,165,233,.12); color:#38bdf8; border:1px solid rgba(14,165,233,.2); }
 .bfb { background:rgba(99,102,241,.12); color:#818cf8; border:1px solid rgba(99,102,241,.2); }
 
-.cdate  { margin-left:auto; font-size:.7rem; color:#7a90a8; }
+.cdate  { margin-left:auto; font-size:.7rem; color:#8fa0b4; }
 .ctitle {
     font-family:'Playfair Display',serif !important;
-    font-size:1rem; font-weight:700; color:#e2e8f0;
+    font-size:1rem; font-weight:700; color:#dde4ed;
     line-height:1.5; margin-bottom:8px;
 }
-.csum { font-size:.84rem; color:#8899aa; line-height:1.7; margin-bottom:12px; font-weight:300; }
+.csum { font-size:.84rem; color:#aab8c8; line-height:1.7; margin-bottom:12px; font-weight:300; }
 .clink {
     font-size:.78rem; font-weight:600; color:#3b82f6; text-decoration:none;
     letter-spacing:.03em; display:inline-flex; align-items:center; gap:4px;
@@ -148,7 +148,7 @@ p, div, span, label, input, textarea, select, button {
 }
 .sechead h3 {
     font-family:'Playfair Display',serif !important;
-    font-size:1.25rem; font-weight:700; color:#e2e8f0; white-space:nowrap;
+    font-size:1.25rem; font-weight:700; color:#dde4ed; white-space:nowrap;
 }
 .sechead::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(74,158,255,.25),transparent); }
 
@@ -166,8 +166,8 @@ p, div, span, label, input, textarea, select, button {
     background:#0a1628 !important; border:1px solid rgba(74,158,255,.18) !important;
     border-radius:10px !important; color:#e8edf3 !important;
 }
-[data-testid="stCheckbox"] label { color:#94a3b8 !important; font-size:.82rem !important; }
-[data-testid="stCheckbox"] label:hover { color:#cbd5e1 !important; }
+[data-testid="stCheckbox"] label { color:#b8c4d0 !important; font-size:.82rem !important; }
+[data-testid="stCheckbox"] label:hover { color:#e8edf3 !important; }
 [data-testid="stButton"] > button {
     background: linear-gradient(135deg,#1d4ed8,#2563eb) !important;
     color: white !important; border: none !important; border-radius: 12px !important;
@@ -217,20 +217,17 @@ st.markdown("""
 
 # DATA
 RSS_FEEDS = {
-    "The Daily Star":        ("https://www.thedailystar.net/business/rss.xml",       "English","🗞️"),
-    "Financial Express BD":  ("https://thefinancialexpress.com.bd/feed",              "English","🗞️"),
-    "Dhaka Tribune":         ("https://www.dhakatribune.com/business/feed",           "English","🗞️"),
-    "The Business Standard": ("https://www.tbsnews.net/rss.xml",                      "English","🗞️"),
-    "New Age BD":            ("https://www.newagebd.net/rss/business",                "English","🗞️"),
-    "Prothom Alo":           ("https://www.prothomalo.com/feed/business",             "বাংলা", "🗞️"),
-    "Kaler Kantho":          ("https://www.kalerkantho.com/feed/business",            "বাংলা", "🗞️"),
-    "Samakal":               ("https://samakal.com/feed/business",                   "বাংলা", "🗞️"),
-    "Bonik Barta":           ("https://bonikbarta.net/feed",                          "বাংলা", "🗞️"),
-    "Jugantor":              ("https://www.jugantor.com/rss.xml",                    "বাংলা", "🗞️"),
-    "Ittefaq":               ("https://www.ittefaq.com.bd/rss.xml",                  "বাংলা", "🗞️"),
-    "Manab Zamin":           ("https://mzamin.com/rss.xml",                          "বাংলা", "🗞️"),
-    "LinkedIn BD":           ("__social__",                                           "LinkedIn","💼"),
-    "Facebook BD":           ("__social__",                                           "Facebook","👥"),
+    "The Daily Star (Business)":        ("https://www.thedailystar.net/business/rss.xml",              "English","🗞️"),
+    "Financial Express BD":             ("https://thefinancialexpress.com.bd/feed",                    "English","🗞️"),
+    "Dhaka Tribune (Business)":         ("https://www.dhakatribune.com/business/feed",                 "English","🗞️"),
+    "The Business Standard":            ("https://www.tbsnews.net/rss.xml",                            "English","🗞️"),
+    "New Age BD (Business)":            ("https://www.newagebd.net/rss/business",                      "English","🗞️"),
+    "Prothom Alo (Business)":           ("https://www.prothomalo.com/feed/business",                   "বাংলা", "🗞️"),
+    "Kaler Kantho (Business)":          ("https://www.kalerkantho.com/feed/business",                  "বাংলা", "🗞️"),
+    "Samakal (Business)":               ("https://samakal.com/feed/business",                          "বাংলা", "🗞️"),
+    "Bonik Barta":                      ("https://bonikbarta.net/feed",                                "বাংলা", "🗞️"),
+    "LinkedIn BD":                      ("__social__",                                                  "LinkedIn","💼"),
+    "Facebook BD":                      ("__social__",                                                  "Facebook","👥"),
 }
 
 ALL_COMPETITORS = [
@@ -264,6 +261,25 @@ def parse_dt(s):
         except: pass
     return None
 
+BUSINESS_KEYWORDS = [
+    # English
+    "invest","revenue","profit","loss","expansion","factory","export","import",
+    "acquisition","ipo","listing","stock","shares","billion","million","taka","crore",
+    "ceo","chairman","md ","managing director","board","agm","egm","quarterly",
+    "market","industry","trade","commerce","manufacturing","production","supply",
+    "partnership","deal","contract","tender","project","launch","business","corporate",
+    "company","group","limited","ltd","plc","bank","finance","economy","gdp",
+    # Bangla
+    "বিনিয়োগ","রাজস্ব","মুনাফা","ক্ষতি","সম্প্রসারণ","কারখানা","রপ্তানি","আমদানি",
+    "অধিগ্রহণ","শেয়ার","কোটি","টাকা","চেয়ারম্যান","ব্যবস্থাপনা","পর্ষদ","বার্ষিক",
+    "বাজার","শিল্প","বাণিজ্য","উৎপাদন","সরবরাহ","চুক্তি","প্রকল্প","উদ্বোধন",
+    "ব্যবসা","কর্পোরেট","কোম্পানি","গ্রুপ","লিমিটেড","ব্যাংক","অর্থনীতি",
+]
+
+def is_business(title, summary):
+    text = (title + " " + summary).lower()
+    return any(kw in text for kw in BUSINESS_KEYWORDS)
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_feeds(keys):
     items=[]
@@ -272,13 +288,17 @@ def fetch_feeds(keys):
         if url=="__social__": continue
         try:
             feed=feedparser.parse(url)
-            for e in feed.entries[:50]:
-                summ=BeautifulSoup(e.get("summary",""),"html.parser").get_text()[:350]
+            for e in feed.entries[:80]:
+                title = e.get("title","").strip()
+                summ  = BeautifulSoup(e.get("summary",""),"html.parser").get_text()[:350].strip()
+                # Filter: business news only
+                if not is_business(title, summ):
+                    continue
                 pub=e.get("published",e.get("updated",""))
                 dt=parse_dt(pub)
                 items.append({
-                    "title":e.get("title","").strip(),"link":e.get("link","#"),
-                    "summary":summ.strip(),"date_dt":dt,
+                    "title":title,"link":e.get("link","#"),
+                    "summary":summ,"date_dt":dt,
                     "date_str":dt.strftime("%d %b %Y") if dt else "—",
                     "source":name,"lang":lang,"icon":icon,
                 })
@@ -418,5 +438,5 @@ else:
     <div style="text-align:center;padding:80px 20px;">
       <div style="font-size:52px;margin-bottom:20px;opacity:.4;color:#4a9eff">◈</div>
       <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#2d5a8a;font-weight:700;margin-bottom:10px">Intelligence Awaits</div>
-      <p style="color:#64748b;font-size:.88rem">উপরে filters সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন</p>
+      <p style="color:#8fa0b4;font-size:.88rem">উপরে filters সেট করে <strong style="color:#3b82f6">◈ Search করুন</strong> চাপুন</p>
     </div>""", unsafe_allow_html=True)

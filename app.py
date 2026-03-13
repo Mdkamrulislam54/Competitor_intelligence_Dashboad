@@ -68,6 +68,18 @@ p,div,span,label,input,textarea,select,button{font-family:'Outfit',sans-serif!im
 .csum{font-size:.84rem;color:#aab8c8;line-height:1.7;margin-bottom:12px;font-weight:300;}
 .clink{font-size:.78rem;font-weight:600;color:#60a5fa;text-decoration:none;letter-spacing:.03em;}
 .clink:hover{color:#93c5fd;}
+.date-pill{
+    background:rgba(74,158,255,.08);
+    border:1px solid rgba(74,158,255,.18);
+    color:#93c5fd;
+    font-size:.72rem;
+    font-weight:500;
+    padding:5px 12px;
+    border-radius:100px;
+    white-space:nowrap;
+    flex-shrink:0;
+    margin-top:3px;
+}
 
 .sechead{display:flex;align-items:center;gap:16px;margin:2rem 0 1.2rem;}
 .sechead h3{font-family:'Playfair Display',serif!important;font-size:1.25rem;font-weight:700;color:#dde4ed;white-space:nowrap;}
@@ -102,16 +114,41 @@ st.markdown("""
 
 # ── DATA ─────────────────────────────────────────────────────
 RSS_SOURCES = [
-    ("The Daily Star",        "https://www.thedailystar.net/business/rss.xml"),
-    ("Financial Express BD",  "https://thefinancialexpress.com.bd/feed"),
-    ("The Business Standard", "https://www.tbsnews.net/rss.xml"),
-    ("Dhaka Tribune",         "https://www.dhakatribune.com/business/feed"),
-    ("New Age BD",            "https://www.newagebd.net/rss/business"),
-    ("Prothom Alo",           "https://www.prothomalo.com/feed/business"),
-    ("Kaler Kantho",          "https://www.kalerkantho.com/feed/business"),
-    ("Samakal",               "https://samakal.com/feed/business"),
-    ("Bonik Barta",           "https://bonikbarta.net/feed"),
-    ("Jugantor",              "https://www.jugantor.com/feed/business"),
+    # ── English Newspapers ──
+    ("The Daily Star",          "https://www.thedailystar.net/business/rss.xml"),
+    ("Financial Express BD",    "https://thefinancialexpress.com.bd/feed"),
+    ("The Business Standard",   "https://www.tbsnews.net/rss.xml"),
+    ("Dhaka Tribune",           "https://www.dhakatribune.com/business/feed"),
+    ("New Age BD",              "https://www.newagebd.net/rss/business"),
+    ("Bangladesh Post",         "https://bangladeshpost.net/rss.xml"),
+    ("The Independent BD",      "https://www.theindependentbd.com/rss.xml"),
+    ("Daily Sun",               "https://www.daily-sun.com/rss.xml"),
+    ("Dhaka Mirror",            "https://www.dhakatribune.com/rss.xml"),
+    # ── Bangla Newspapers ──
+    ("Prothom Alo",             "https://www.prothomalo.com/feed/business"),
+    ("Kaler Kantho",            "https://www.kalerkantho.com/feed/business"),
+    ("Samakal",                 "https://samakal.com/feed/business"),
+    ("Bonik Barta",             "https://bonikbarta.net/feed"),
+    ("Jugantor",                "https://www.jugantor.com/feed/business"),
+    ("Ittefaq",                 "https://www.ittefaq.com.bd/rss.xml"),
+    ("Manab Zamin",             "https://mzamin.com/rss.xml"),
+    ("Naya Diganta",            "https://www.dailynayadiganta.com/rss.xml"),
+    ("Inqilab",                 "https://www.dailyinqilab.com/rss.xml"),
+    ("Amader Shomoy",           "https://www.dainikamadershomoy.com/rss.xml"),
+    ("Bangladesh Pratidin",     "https://www.bd-pratidin.com/rss.xml"),
+    ("Bhorer Kagoj",            "https://www.bhorerkagoj.com/rss.xml"),
+    ("Janakantha",              "https://www.dailyjanakantha.com/rss.xml"),
+    ("Sangbad",                 "https://www.sangbad.net.bd/feed"),
+    ("Desh Rupantor",           "https://www.deshrupantor.com/feed"),
+    ("Sharebiz",                "https://sharebiz.net/feed"),
+    # ── Online Portals ──
+    ("Bangla Tribune",          "https://www.banglatribune.com/feed"),
+    ("Risingbd",                "https://www.risingbd.com/rss.xml"),
+    ("Jagonews",                "https://www.jagonews24.com/rss.xml"),
+    ("Channel 24",              "https://www.channel24bd.tv/rss.xml"),
+    ("Somoy News",              "https://www.somoynews.tv/rss.xml"),
+    ("Independent TV",          "https://www.itvbd.com/rss.xml"),
+    ("News24 BD",               "https://www.news24bd.tv/rss.xml"),
 ]
 
 ALL_COMPETITORS = [
@@ -299,9 +336,11 @@ if run:
                 <span class="badge bc">{item['competitor']}</span>
                 <span class="badge {scls}">{sico} {item['source']}</span>
                 {SB.get(item['sentiment'],'')}
-                <span class="cdate">🗓 {item['date_str']}</span>
               </div>
-              <div class="ctitle">{item['title']}</div>
+              <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+                <div class="ctitle" style="flex:1;margin-bottom:0">{item['title']}</div>
+                <div class="date-pill">📅 {item['date_str']}</div>
+              </div>
               <div class="csum">{summ}</div>
               <a class="clink" href="{item['link']}" target="_blank">সম্পূর্ণ পড়ুন →</a>
             </div>""", unsafe_allow_html=True)
